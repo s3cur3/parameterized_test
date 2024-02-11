@@ -1,0 +1,69 @@
+name: Elixir Quality Checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  quality_checks:
+    name: Formatting, Dialyzer, Credo, and Unused Deps
+    runs-on: ubuntu-22.04
+    env:
+      MIX_ENV: dev
+      elixir: "1.16.0"
+      otp: "26.2.1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Elixir Project
+        uses: ./.github/actions/elixir-setup
+        with:
+          elixir-version: ${{ env.elixir }}
+          otp-version: ${{ env.otp }}
+          build-app: false
+
+      # Don't cache PLTs based on mix.lock hash, as Dialyzer can incrementally update even old ones
+      # Cache key based on Elixir & Erlang version (also useful when running in matrix)
+      - name: Restore PLT cache
+        uses: actions/cache@v3
+        id: plt_cache
+        with:
+          path: priv/plts
+          key: plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}-${{ hashFiles('**/*.ex') }}
+          restore-keys: |
+            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}-${{ hashFiles('**/*.ex') }}
+            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}-
+            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-
+              
+      # Create PLTs if no cache was found.
+      # Always rebuild PLT when a job is retried
+      # (If they were cached at all, they'll be updated when we run mix dialyzer with no flags.)
+      - name: Create PLTs
+        if: steps.plt_cache.outputs.cache-hit != 'true' || github.run_attempt != '1'
+        run: mix dialyzer --plt
+
+      - name: Run Dialyzer
+        run: mix dialyzer --format github
+
+      - name: Check for unused deps
+        run: mix deps.unlock --check-unused
+        if: always()
+
+      - name: Check code formatting
+        run: mix format --check-formatted
+        if: always()
+
+      - name: Run Credo
+        run: mix credo suggest --min-priority=normal
+        if: always()
+
+      - name: Check for compile-time dependencies
+        run: mix xref graph --label compile-connected --fail-above 0
+        if: always()
