@@ -50,13 +50,11 @@ defmodule ExampleTest do
       end
   """
   defmacro example_test(test_name, examples, context_ast \\ %{}, blocks) do
-    parsed_examples =
+    escaped_examples =
       case examples do
-        str when is_binary(str) -> sigil_EXAMPLES(str)
-        l when is_list(l) -> l
+        str when is_binary(str) -> str |> sigil_EXAMPLES() |> Macro.escape()
+        already_escaped when is_tuple(already_escaped) -> already_escaped
       end
-
-    escaped_examples = Macro.escape(parsed_examples)
 
     max_describe_length_to_fit_on_one_line = 82
     test_name_length = String.length(test_name)

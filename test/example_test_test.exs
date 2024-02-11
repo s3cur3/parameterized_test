@@ -107,6 +107,28 @@ defmodule ExampleTestTest do
     end
   end
 
+  example_test "accepts pre-parsed values from ~EXAMPLES sigil",
+               ~EXAMPLES"""
+               | int_1 | int_2 |
+               | 2     | 4     |
+               """,
+               %{int_1: int_1, int_2: int_2} do
+    assert int_1 == 2
+    assert int_2 == 4
+  end
+
+  @module_examples ~EXAMPLES"""
+  | int_1 | int_2 |
+  | 99    | 100   |
+  """
+
+  example_test "accepts pre-parsed values from ~EXAMPLES sigil",
+               @module_examples,
+               %{int_1: int_1, int_2: int_2} do
+    assert int_1 == 99
+    assert int_2 == 100
+  end
+
   describe "with a very, very, very, very, very, very, very, very, very long `describe` title" do
     example_test "truncates extremely long contexts to avoid overflowing the atom length limit",
                  """
