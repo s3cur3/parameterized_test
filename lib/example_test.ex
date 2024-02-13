@@ -52,7 +52,7 @@ defmodule ExampleTest do
   defmacro example_test(test_name, examples, context_ast \\ %{}, blocks) do
     escaped_examples =
       case examples do
-        str when is_binary(str) -> str |> sigil_EXAMPLES() |> Macro.escape()
+        str when is_binary(str) -> str |> parse_examples() |> Macro.escape()
         already_escaped when is_tuple(already_escaped) -> already_escaped
       end
 
@@ -77,48 +77,8 @@ defmodule ExampleTest do
     end
   end
 
-  @doc ~S"""
-  Provides a sigil for producing example data that you can use in tests.
-
-  ### Examples
-
-  You can have an arbitrary number of columns and rows. Headers are parsed
-  as atoms, while the individual cells are parsed as Elixir values.
-
-      iex> ~EXAMPLES\"""
-      ...>   | plan      | user_permission | can_invite?     |
-      ...>   | :free     | :admin          | true            |
-      ...>   | :free     | :editor         | "maybe"         |
-      ...>   | :free     | :view_only      | false           |
-      ...>   | :standard | :admin          | true            |
-      ...>   | :standard | :editor         | "tuesdays only" |
-      ...>   | :standard | :view_only      | false           |
-      ...> \"""
-      [
-        %{plan: :free, user_permission: :admin, can_invite?: true},
-        %{plan: :free, user_permission: :editor, can_invite?: "maybe"},
-        %{plan: :free, user_permission: :view_only, can_invite?: false},
-        %{plan: :standard, user_permission: :admin, can_invite?: true},
-        %{plan: :standard, user_permission: :editor, can_invite?: "tuesdays only"},
-        %{plan: :standard, user_permission: :view_only, can_invite?: false}
-      ]
-
-  You can optionally include separators between the headers and the data.
-
-      iex> ~EXAMPLES\"""
-      ...>   | plan      | user_permission | can_invite?     |
-      ...>   |-----------|-----------------|-----------------|
-      ...>   | :free     | :admin          | true            |
-      ...>   | :free     | :editor         | "maybe"         |
-      ...> \"""
-      [
-        %{plan: :free, user_permission: :admin, can_invite?: true},
-        %{plan: :free, user_permission: :editor, can_invite?: "maybe"}
-      ]
-  """
-  @spec sigil_EXAMPLES(String.t(), Keyword.t()) :: [map()]
-  # credo:disable-for-next-line Credo.Check.Readability.FunctionNames
-  def sigil_EXAMPLES(table, _opts \\ []) do
+  @spec parse_examples(String.t(), Keyword.t()) :: [map()]
+  def parse_examples(table, _opts \\ []) do
     rows =
       table
       |> String.split("\n", trim: true)

@@ -75,15 +75,24 @@ defmodule ExampleTest.MixProject do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+    List.flatten(
+      [
+        {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
 
-      # Code quality
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.2", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.18.0", only: [:dev, :test], runtime: false},
-      {:styler, "~> 0.11", only: [:dev, :test], runtime: false}
-    ]
+        # Code quality
+        {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+        {:dialyxir, "~> 1.2", only: [:dev, :test], runtime: false},
+        {:excoveralls, "~> 0.18.0", only: [:dev, :test], runtime: false}
+      ] ++ styler_deps()
+    )
+  end
+
+  defp styler_deps do
+    if Version.match?(System.version(), "< 1.15.0") do
+      []
+    else
+      [{:styler, "~> 0.11", only: [:dev, :test], runtime: false}]
+    end
   end
 
   # Aliases are shortcuts or tasks specific to the current project.
