@@ -145,7 +145,7 @@ When would you write a property test instead of an example tests?
     ```elixir
     def deps do
       [
-        {:example_test, "~> 0.0.1"},
+        {:example_test, "~> 0.0.1", only: [:test]},
       ]
     end
     ```
