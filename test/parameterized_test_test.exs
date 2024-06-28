@@ -101,6 +101,17 @@ defmodule ParameterizedTestTest do
     assert int_2 == 100
   end
 
+  param_test "accepts a list of maps or keyword lists",
+             [
+               [int_1: 99, int_2: 100],
+               %{int_1: 101, int_2: 102}
+             ],
+             %{int_1: int_1, int_2: int_2} do
+    assert int_1 + 1 == int_2
+    assert int_1 in [99, 101]
+    assert int_2 in [100, 102]
+  end
+
   test "fails to compile Markdown rows with too few columns" do
     assert_raise RuntimeError, fn ->
       defmodule FailToEvaluateBadMarkdownTest do
@@ -134,6 +145,27 @@ defmodule ParameterizedTestTest do
                    """,
                    %{gets_free_shipping?: gets_free_shipping?} do
           assert gets_free_shipping?
+        end
+      end
+    end
+  end
+
+  test "fails to compile when the keys in a handrolled list don't all match" do
+    assert_raise RuntimeError, fn ->
+      defmodule FailToEvaluateBadMarkdownTest do
+        use ExUnit.Case, async: true
+
+        import ParameterizedTest
+
+        param_test "mismatched keys",
+                   [
+                     [int_1: 99, int_2: 100],
+                     %{int_1: 101}
+                   ],
+                   %{int_1: int_1, int_2: int_2} do
+          assert int_1 + 1 == int_2
+          assert int_1 in [99, 101]
+          assert int_2 in [100, 102]
         end
       end
     end

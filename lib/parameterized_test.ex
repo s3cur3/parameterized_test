@@ -22,6 +22,22 @@ defmodule ParameterizedTest do
         assert free_shipping? == gets_free_shipping?
       end
 
+  Alternatively, if you don't like the Markdown table format, you can supply a
+  hand-rolled list of parameters to the `param_test` macro, like this:
+
+      param_test "shipping policy matches the web site",
+                  [
+                    # Items in the parameters list can be either maps...
+                    %{spending_by_category: %{pants: 29_99}, coupon: "FREE_SHIP"},
+                    # ...or keyword lists
+                    [spending_by_category: %{shoes: 19_99, pants: 29_99}, coupon: nil]
+                  ],
+                  %{spending_by_category: spending_by_category, coupon: coupon} do
+        ...
+      end
+
+  Just make sure that each item in the parameters list has the same keys.
+
   ## Why parameterized testing?
 
   Parameterized testing reduces toil associated with writing tests that cover
@@ -38,6 +54,8 @@ defmodule ParameterizedTest do
   a requirements document that your product folks provide, and the
   product folks can later read the tests (or at least the parameters table)
   if they want to verify the behavior of the system.
+
+  See the README for more information.
   """
 
   @doc """
@@ -55,6 +73,7 @@ defmodule ParameterizedTest do
     escaped_examples =
       case examples do
         str when is_binary(str) -> str |> parse_examples(context) |> Macro.escape()
+        list when is_list(list) -> list |> parse_examples(context) |> Macro.escape()
         already_escaped when is_tuple(already_escaped) -> already_escaped
       end
 
@@ -81,8 +100,10 @@ defmodule ParameterizedTest do
 
   @typep context :: [{:line, integer} | {:file, String.t()}]
 
-  @spec parse_examples(String.t(), context()) :: [map()]
-  def parse_examples(table, context \\ []) do
+  @spec parse_examples(String.t() | list, context()) :: [map()]
+  def parse_examples(table, context \\ [])
+
+  def parse_examples(table, context) when is_binary(table) do
     rows =
       table
       |> String.split("\n", trim: true)
@@ -114,17 +135,11 @@ defmodule ParameterizedTest do
             end)
 
           if length(cells) != length(headers) do
-            file_meta =
-              case {context[:file], context[:line]} do
-                {file, line} when is_binary(file) and is_integer(line) -> " (#{file}:#{line})"
-                {nil, nil} -> ""
-              end
-
             raise """
             The number of cells in each row must exactly match the
             number of headers on your example table.
 
-            Problem row#{file_meta}:
+            Problem row#{file_meta(context)}:
             #{row}
 
             Expected headers:
@@ -143,6 +158,30 @@ defmodule ParameterizedTest do
     end
   end
 
+  # This function head handles a list of already-parsed examples, like:
+  # param_test "accepts a list of maps or keyword lists",
+  #            [
+  #              [int_1: 99, int_2: 100],
+  #              %{int_1: 101, int_2: 102}
+  #            ], %{int_1: int_1, int_2: int_2} do
+  def parse_examples(table, context) when is_list(table) do
+    {evaled_table, _, _} = Code.eval_quoted_with_env(table, [], __ENV__)
+    parsed_table = Enum.map(evaled_table, &Map.new/1)
+
+    keys = MapSet.new(parsed_table, &Map.keys/1)
+
+    if MapSet.size(keys) > 1 do
+      raise """
+      The keys in each row must be the same across all rows in your example table.
+
+      Found differing key sets#{file_meta(context)}:
+      #{for key_set <- Enum.sort(keys), do: inspect(key_set)}
+      """
+    end
+
+    parsed_table
+  end
+
   defp split_cells(row) do
     row
     |> String.split("|", trim: true)
@@ -155,4 +194,10 @@ defmodule ParameterizedTest do
   defp separator_row?(row) do
     Regex.match?(@separator_regex, row)
   end
+
+  defp file_meta(%{file: file, line: line}) when is_binary(file) and is_integer(line) do
+    " (#{file}:#{line})"
+  end
+
+  defp file_meta(_), do: ""
 end

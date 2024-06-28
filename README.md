@@ -84,6 +84,26 @@ param_test "grants free shipping based on the marketing site's stated policy",
 end
 ```
 
+## "I hate the Markdown table syntax!"
+
+No sweat, you don't have to use it. You can instead pass a hand-rolled list of
+parameters to the `param_test` macro, like this:
+
+```elixir
+param_test "shipping policy matches the web site",
+            [
+              # Items in the parameters list can be either maps...
+              %{spending_by_category: %{pants: 29_99}, coupon: "FREE_SHIP"},
+              # ...or keyword lists
+              [spending_by_category: %{shoes: 19_99, pants: 29_99}, coupon: nil]
+            ],
+            %{spending_by_category: spending_by_category, coupon: coupon} do
+  ...
+end
+```
+
+Just make sure that each item in the parameters list has the same keys.
+
 ## Why parameterized testing?
 
 Parameterized testing reduces toil associated with writing tests that cover
@@ -101,23 +121,41 @@ a requirements document that your product folks provide, and the
 product folks can later read the tests (or at least the parameters table)
 if they want to verify the behavior of the system.
 
-### Example tests versus property tests
+### Parameterized tests versus property tests
 
-Example tests cover a lot of the same ground as property-based testing.
+Parameterized tests are superficially similar to property-based tests.
 Both allow you to write fewer tests while covering more of your system's
 behavior. This library is not a replacement for property tests, but
 rather complimentary to them.
 
-There are a few reasons you might choose to write an example
+There are a few reasons you might choose to write a parameterized
 test rather than a property test:
 
+- **When describing policies, not invariants**: Much of a system's
+  business logic comes down to arbitrary choices made by a product team.
+  For instance, there's nothing in the abstract description of a shipping
+  calculator that says buying socks or spending $100 total should grant
+  you free shipping. Those aren't *principles* that every correctly
+  implemented shipping system would implement. Instead, they're choices
+  made by someone (maybe a product manager) which will in all likelihood
+  be fiddled with over time.
+  
+  Contrast that with the classic use cases for property tests: every 
+  (correct) implementation of, say, `List.sort/1` will *always* have
+  the dual properties of:
+  
+  1. every element of the input being represented in the output, and 
+  2. every element being "less than" the element after it.
+
+  These sorting properties are *invariants* of the sorting function,
+  and therefore are quite amenable to property testing.
 - **Ease of writing**: Property tests take a lot of practice to get
   good at writing. They're often quite time consuming to produce, and
   even when you think you've adequately described the parameters to
   the system.
-- **For communication with other stakeholders**: An example test
-  table can be made readable by non-programmers (or non-Elixir 
-  programmers), so they can be a good way of showing other people
+- **For communication with other stakeholders**: The table of examples
+  in a parameterized test can be made readable by non-programmers (or 
+  non-Elixir  programmers), so they can be a good way of showing others
   in your organization which behaviors of the system you've verified.
   Because they can compactly express a lot of test cases, they're
   much more suitable for this than saying "go read the title of
@@ -133,10 +171,14 @@ test rather than a property test:
 
 When would you write a property test instead of an example tests?
 
-- When you want the absolute highest confidence in your code.
+- When you can specify true invariants about the desired behavior
+- When you want the absolute highest confidence in your code
 - When the correctness of a piece of code is important enough to merit
-  a large time investment in getting the tests right.
-- When the system's behavior at the edges is well specified.
+  a large time investment in getting the tests right
+- When the system's behavior at the edges is well specified
+
+And of course there's nothing wrong with using a mix of normal tests,
+parameterized tests, and property tests for a given piece of functionality.
 
 ## Installation and writing your first test
 
