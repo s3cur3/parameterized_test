@@ -1,8 +1,8 @@
 defmodule ParameterizedTest do
   @moduledoc ~S"""
-  A utility for defining eminently readable example-based tests.
+  A utility for defining eminently readable parameterized (or example-based) tests.
 
-  Example tests look like this:
+  Parameterized tests look like this:
 
       param_test "grants free shipping based on the marketing site's stated policy",
                  \"\"\"
@@ -22,10 +22,10 @@ defmodule ParameterizedTest do
         assert free_shipping? == gets_free_shipping?
       end
 
-  ## Why example testing?
+  ## Why parameterized testing?
 
-  Example testing reduces toil associated with writing tests that cover
-  a wide variety of different cases. It also localizes the test logic
+  Parameterized testing reduces toil associated with writing tests that cover
+  a wide variety of different example cases. It also localizes the test logic
   into a single place, so that at a glance you can see how a number of
   different factors affect the behavior of the system under test.
 
@@ -34,19 +34,19 @@ defmodule ParameterizedTest do
   both internally and to customers—for instance, in a table describing
   shipping costs based on how much a customer spends, where they're
   located, whether they've bought a promotional product, etc. This means
-  example tests can often be initially created by pulling directly from
-  a requirements document that your product folks provided, and the
-  product folks can later read the tests (or at least the examples table)
+  parameterized tests can often be initially created by pulling directly from
+  a requirements document that your product folks provide, and the
+  product folks can later read the tests (or at least the parameters table)
   if they want to verify the behavior of the system.
   """
 
   @doc """
-  Defines tests that use your example data.
+  Defines tests that use your parameters or example data.
 
   Use it like:
 
-      param_test "works as expected", examples, %{value: from_context, expected_result: expected_result} do
-        assert something(from_context) == expected_result
+      param_test "works as expected", your_parameters, %{value: from_context, expected_result: expected_result} do
+        assert MyModule.process(from_context) == expected_result
       end
   """
   defmacro param_test(test_name, examples, context_ast \\ %{}, blocks) do

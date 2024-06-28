@@ -2,12 +2,12 @@
 
 [![Hex.pm](https://img.shields.io/hexpm/v/parameterized_test)](https://hex.pm/packages/parameterized_test) [![Build and Test](https://github.com/s3cur3/parameterized_test/actions/workflows/elixir-build-and-test.yml/badge.svg)](https://github.com/s3cur3/parameterized_test/actions/workflows/elixir-build-and-test.yml) [![Elixir Quality Checks](https://github.com/s3cur3/parameterized_test/actions/workflows/elixir-quality-checks.yml/badge.svg)](https://github.com/s3cur3/parameterized_test/actions/workflows/elixir-quality-checks.yml) [![Code coverage](https://codecov.io/gh/s3cur3/parameterized_test/graph/badge.svg)](https://codecov.io/gh/s3cur3/parameterized_test)
 
-A utility for defining eminently readable example-based tests in 
+A utility for defining eminently readable parameterized (or example-based) tests in 
 Elixir's ExUnit, inspired by [example tests in Cucumber](https://cucumber.io/docs/guides/10-minute-tutorial/?lang=java#using-variables-and-examples).
 
-## What are example tests?
+## What are parameterized tests?
 
-Example tests let you define variables along a number of dimensions 
+Parameterized tests let you define variables along a number of dimensions 
 and re-run the same test body (including all `setup`) for each 
 combination of variables.
 
@@ -15,22 +15,22 @@ An extremely simple (perhaps too simple!) example:
 
 ```elixir
 setup context do
-  # context.permissions gets set by the parameterized_test below
+  # context.permissions gets set by the param_test below
   permissions = Map.get(context, :permissions, nil)
   user = AccountsFixtures.user_fixture{permissions: permissions}
   %{user: user}
 end
 
-parameterized_test "users can view the post regardless of permission level",
-             """
-             | permissions |
-             |-------------|
-             | :admin      |
-             | :editor     |
-             | :viewer     |
-             | nil         |
-             """,
-             %{user: user, permissions: permissions} do
+param_test "users can view the post regardless of permission level",
+           """
+           | permissions |
+           |-------------|
+           | :admin      |
+           | :editor     |
+           | :viewer     |
+           | nil         |
+           """,
+           %{user: user, permissions: permissions} do
   assert Posts.can_view?(user), "User with #{permissions} permissions should be able to view"
 end
 ```
@@ -84,10 +84,10 @@ param_test "grants free shipping based on the marketing site's stated policy",
 end
 ```
 
-## Why example testing?
+## Why parameterized testing?
 
-Example testing reduces toil associated with writing tests that cover
-a wide variety of different cases. It also localizes the test logic
+Parameterized testing reduces toil associated with writing tests that cover
+a wide variety of different example cases. It also localizes the test logic
 into a single place, so that at a glance you can see how a number of
 different factors affect the behavior of the system under test.
 
@@ -96,9 +96,9 @@ matches how the business communicates the requirements of a system,
 both internally and to customers—for instance, in a table describing
 shipping costs based on how much a customer spends, where they're
 located, whether they've bought a promotional product, etc. This means
-example tests can often be initially created by pulling directly from
-a requirements document that your product folks provided, and the
-product folks can later read the tests (or at least the examples table)
+parameterized tests can often be initially created by pulling directly from
+a requirements document that your product folks provide, and the
+product folks can later read the tests (or at least the parameters table)
 if they want to verify the behavior of the system.
 
 ### Example tests versus property tests
@@ -185,3 +185,39 @@ When would you write a property test instead of an example tests?
         end
     end
     ```
+
+## About test names
+
+ExUnit requires each test in a module to have a unique name. To that end,
+ParameterizedTest appends a stringified version of the parameters passed
+to your test to the name you give the test. Consider this test:
+
+```elixir
+param_test "checks equality",
+            """
+            | val_1 | val_2 |
+            | :a    | :a    |
+            | :b    | :c    |
+            """,
+            %{val_1: val_1, val_2: val_2} do
+  assert val_1 == val_2
+end
+```
+
+Under the hood, this produces two tests with the names:
+
+- `"checks equality (%{val_1: :a, val_b: :a})"`
+- `"checks equality (%{val_1: :b, val_b: :c})"`
+
+And if you ran this test, you'd get an error that looks like this:
+
+```
+  1) test checks equality (%{val_1: :b, val_2: :c}) (MyModuleTest)
+     test/my_module_test.exs:4
+     Assertion with == failed
+     code:  assert val_1 == val_2
+     left:  :b
+     right: :c
+     stacktrace:
+       test/my_module_test.exs:11: (test)
+```
