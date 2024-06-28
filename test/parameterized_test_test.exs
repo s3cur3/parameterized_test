@@ -65,7 +65,7 @@ defmodule ParameterizedTestTest do
     end
 
     param_test "supports TSV files as input",
-               "test/fixtures/params.csv",
+               "test/fixtures/params.tsv",
                %{
                  coupon: coupon,
                  gets_free_shipping?: gets_free_shipping?

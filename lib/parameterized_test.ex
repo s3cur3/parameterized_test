@@ -41,6 +41,20 @@ defmodule ParameterizedTest do
 
   Just make sure that each item in the parameters list has the same keys.
 
+  The final option is to pass a path to a *file* that contains your test parameters (we currently support `.md`/`.markdown`, `.csv`, and `.tsv` files), like this:
+
+  ```elixir
+  param_test "pull test parameters from a file",
+              "test/fixtures/params.md",
+              %{
+                spending_by_category: spending_by_category,
+                coupon: coupon,
+                gets_free_shipping?: gets_free_shipping?
+              } do
+    ...
+  end
+  ```
+
   ## Why parameterized testing?
 
   Parameterized testing reduces toil associated with writing tests that cover
