@@ -10,10 +10,10 @@
     ```elixir
     param_test "shipping policy matches the web site",
                 [
-                # Items in the parameters list can be either maps...
-                %{spending_by_category: %{pants: 29_99}, coupon: "FREE_SHIP"},
-                # ...or keyword lists
-                [spending_by_category: %{shoes: 19_99, pants: 29_99}, coupon: nil]
+                  # Items in the parameters list can be either maps...
+                  %{spending_by_category: %{pants: 29_99}, coupon:   "FREE_SHIP"},
+                  # ...or keyword lists
+                  [spending_by_category: %{shoes: 19_99, pants: 29_99}, coupon: nil]
                 ],
                 %{spending_by_category: spending_by_category, coupon: coupon} do
     ...
