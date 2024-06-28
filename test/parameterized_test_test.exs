@@ -100,4 +100,50 @@ defmodule ParameterizedTestTest do
     assert int_1 == 99
     assert int_2 == 100
   end
+
+  test "fails to compile Markdown rows with too few columns" do
+    assert_raise RuntimeError, fn ->
+      defmodule FailToEvaluateBadMarkdownTest do
+        use ExUnit.Case, async: true
+
+        import ParameterizedTest
+
+        param_test "test with invalid markdown",
+                   """
+                   | spending_by_category          | coupon      | gets_free_shipping? |
+                   |
+                   """,
+                   %{gets_free_shipping?: gets_free_shipping?} do
+          assert gets_free_shipping?
+        end
+      end
+    end
+  end
+
+  test "fails to compile Markdown rows with invalid Elixir in them" do
+    assert_raise RuntimeError, fn ->
+      defmodule FailToEvaluateBadMarkdownTest do
+        use ExUnit.Case, async: true
+
+        import ParameterizedTest
+
+        param_test "test with invalid Elixir in a cell",
+                   """
+                   | spending_by_category  |
+                   | %{shoes: 19_99,       |
+                   """,
+                   %{gets_free_shipping?: gets_free_shipping?} do
+          assert gets_free_shipping?
+        end
+      end
+    end
+  end
+
+  describe "parse_examples/1" do
+    test "accepts strings that parse as empty" do
+      for empty <- ["", " ", "\n", "\t", "\r\n", "\n\n \r\n \t \r"] do
+        assert ParameterizedTest.parse_examples(empty) == []
+      end
+    end
+  end
 end
