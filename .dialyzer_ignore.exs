@@ -5,4 +5,6 @@
 #
 # More info in the Dialyxir README:
 # https://github.com/jeremyjh/dialyxir#elixir-term-format
-[]
+[
+  {"deps/nimble_csv/lib/nimble_csv.ex", :unmatched_return}
+]

@@ -42,6 +42,36 @@ defmodule ParameterizedTestTest do
       free_shipping? = shipping_cost == 0
       assert free_shipping? == gets_free_shipping?
     end
+
+    param_test "supports Markdown files as input",
+               "test/fixtures/params.md",
+               %{
+                 spending_by_category: spending_by_category,
+                 coupon: coupon,
+                 gets_free_shipping?: gets_free_shipping?
+               } do
+      shipping_cost = ExampleShippingCalculator.calculate_shipping(spending_by_category, coupon)
+      free_shipping? = shipping_cost == 0
+      assert free_shipping? == gets_free_shipping?
+    end
+
+    param_test "supports CSV files as input",
+               "test/fixtures/params.csv",
+               %{
+                 coupon: coupon,
+                 gets_free_shipping?: gets_free_shipping?
+               } do
+      assert (coupon == "FREE_SHIP" and gets_free_shipping?) or (is_nil(coupon) and not gets_free_shipping?)
+    end
+
+    param_test "supports TSV files as input",
+               "test/fixtures/params.csv",
+               %{
+                 coupon: coupon,
+                 gets_free_shipping?: gets_free_shipping?
+               } do
+      assert (coupon == "FREE_SHIP" and gets_free_shipping?) or (is_nil(coupon) and not gets_free_shipping?)
+    end
   end
 
   defmodule ExampleAccounts do

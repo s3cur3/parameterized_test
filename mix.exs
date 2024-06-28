@@ -77,6 +77,7 @@ defmodule ParameterizedTest.MixProject do
   defp deps do
     List.flatten(
       [
+        {:nimble_csv, "~> 1.1"},
         {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
 
         # Code quality
