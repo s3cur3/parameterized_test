@@ -16,12 +16,12 @@ jobs:
       MIX_ENV: test
     strategy:
       matrix:
-        elixir: ["1.13.4", "1.14.4", "1.15.7", "1.16.0"]
+        elixir: ["1.14.4", "1.15.7", "1.16.0", "1.17.1"]
         otp: ["24.3.4", "25.3.2", "26.2.1"]
         exclude:
-          # Elixir 1.13 doesn't support the latest OTP
-          - elixir: "1.13.4"
-            otp: "26.2.1"
+          # Elixir 1.17 doesn't support OTP 24
+          - elixir: "1.17.1"
+            otp: "24.3.4"
 
     steps:
       - name: Checkout repository
