@@ -1,6 +1,6 @@
-# ExampleTest
+# ParameterizedTest
 
-[![Hex.pm](https://img.shields.io/hexpm/v/example_test)](https://hex.pm/packages/example_test) [![Build and Test](https://github.com/s3cur3/example_test/actions/workflows/elixir-build-and-test.yml/badge.svg)](https://github.com/s3cur3/example_test/actions/workflows/elixir-build-and-test.yml) [![Elixir Quality Checks](https://github.com/s3cur3/example_test/actions/workflows/elixir-quality-checks.yml/badge.svg)](https://github.com/s3cur3/example_test/actions/workflows/elixir-quality-checks.yml) [![Code coverage](https://codecov.io/gh/s3cur3/example_test/graph/badge.svg)](https://codecov.io/gh/s3cur3/example_test)
+[![Hex.pm](https://img.shields.io/hexpm/v/parameterized_test)](https://hex.pm/packages/parameterized_test) [![Build and Test](https://github.com/s3cur3/parameterized_test/actions/workflows/elixir-build-and-test.yml/badge.svg)](https://github.com/s3cur3/parameterized_test/actions/workflows/elixir-build-and-test.yml) [![Elixir Quality Checks](https://github.com/s3cur3/parameterized_test/actions/workflows/elixir-quality-checks.yml/badge.svg)](https://github.com/s3cur3/parameterized_test/actions/workflows/elixir-quality-checks.yml) [![Code coverage](https://codecov.io/gh/s3cur3/parameterized_test/graph/badge.svg)](https://codecov.io/gh/s3cur3/parameterized_test)
 
 A utility for defining eminently readable example-based tests in 
 Elixir's ExUnit, inspired by [example tests in Cucumber](https://cucumber.io/docs/guides/10-minute-tutorial/?lang=java#using-variables-and-examples).
@@ -15,13 +15,13 @@ An extremely simple (perhaps too simple!) example:
 
 ```elixir
 setup context do
-  # context.permissions gets set by the example_test below
+  # context.permissions gets set by the parameterized_test below
   permissions = Map.get(context, :permissions, nil)
   user = AccountsFixtures.user_fixture{permissions: permissions}
   %{user: user}
 end
 
-example_test "users can view the post regardless of permission level",
+parameterized_test "users can view the post regardless of permission level",
              """
              | permissions |
              |-------------|
@@ -58,22 +58,22 @@ end
 ```
 
 Of course, that example only had a single variable, so you could argue
-the `for` version is cleaner. But `example_test` supports an arbitrary
+the `for` version is cleaner. But `parameterized_test` supports an arbitrary
 number of variables, so you can describe complex business rules like
 "users get free shipping if they spend more than $100, or if they buy
 socks, or if they have the right coupon code":
 
 ```elixir
-example_test "grants free shipping based on the marketing site's stated policy",
-             """
-             | spending_by_category          | coupon      | gets_free_shipping? |
-             |-------------------------------|-------------|---------------------|
-             | %{shoes: 19_99, pants: 29_99} |             | false               |
-             | %{shoes: 59_99, pants: 49_99} |             | true                |
-             | %{socks: 10_99}               |             | true                |
-             | %{pants: 1_99}                | "FREE_SHIP" | true                |
-             """,
-             %{
+param_test "grants free shipping based on the marketing site's stated policy",
+            """
+            | spending_by_category          | coupon      | gets_free_shipping? |
+            |-------------------------------|-------------|---------------------|
+            | %{shoes: 19_99, pants: 29_99} |             | false               |
+            | %{shoes: 59_99, pants: 49_99} |             | true                |
+            | %{socks: 10_99}               |             | true                |
+            | %{pants: 1_99}                | "FREE_SHIP" | true                |
+            """,
+            %{
                spending_by_category: spending_by_category,
                coupon: coupon,
                gets_free_shipping?: gets_free_shipping?
@@ -140,18 +140,18 @@ When would you write a property test instead of an example tests?
 
 ## Installation and writing your first test
 
-1. Add `example_test` to your `mix.exs` dependencies:
+1. Add `parameterized_test` to your `mix.exs` dependencies:
 
     ```elixir
     def deps do
       [
-        {:example_test, "~> 0.0.1", only: [:test]},
+        {:parameterized_test, "~> 0.1.0", only: [:test]},
       ]
     end
     ```
 2. Run `$ mix deps.get` to download the package
-3. Write your first example test by adding `import ExampleTest` 
-   to the top of your test module, and using the `example_test` macro.
+3. Write your first example test by adding `import ParameterizedTest` 
+   to the top of your test module, and using the `param_test` macro.
 
    You can optionally include a separator between the header and body
    of the table (like `|--------|-------|`).
@@ -165,22 +165,22 @@ When would you write a property test instead of an example tests?
     ```elixir
     defmodule MyApp.MyModuleTest do
       use ExUnit.Case, async: true
-      import ExampleTest
+      import ParameterizedTest
 
-      example_test "behaves as expected",
-                   """
-                   | variable_1       | variable_2           | etc     |
-                   |------------------|----------------------|---------|
-                   | %{foo: :bar}     | div(19, 3)           | false   | 
-                   | "bip bop"        | String.upcase("foo") | true    |
-                   | ["whiz", "bang"] | :ok                  |         |
-                   |                  | nil                  | "maybe" |
-                   """,
-                   %{
-                     variable_1: variable_1,
-                     variable_2: variable_2,
-                     etc: etc
-                   } do
+      param_test "behaves as expected",
+                 """
+                 | variable_1       | variable_2           | etc     |
+                 |------------------|----------------------|---------|
+                 | %{foo: :bar}     | div(19, 3)           | false   | 
+                 | "bip bop"        | String.upcase("foo") | true    |
+                 | ["whiz", "bang"] | :ok                  |         |
+                 |                  | nil                  | "maybe" |
+                 """,
+                 %{
+                   variable_1: variable_1,
+                   variable_2: variable_2,
+                   etc: etc
+                 } do
           assert MyModule.valid_combination?(variable_1, variable_2, etc)
         end
     end

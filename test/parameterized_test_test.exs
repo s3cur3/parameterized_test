@@ -1,9 +1,9 @@
-defmodule ExampleTestTest do
+defmodule ParameterizedTestTest do
   use ExUnit.Case, async: true
 
-  import ExampleTest
+  import ParameterizedTest
 
-  doctest ExampleTest, import: true
+  doctest ParameterizedTest, import: true
 
   defmodule ExampleShippingCalculator do
     @moduledoc false
@@ -24,20 +24,20 @@ defmodule ExampleTestTest do
   end
 
   describe "shipping policy" do
-    example_test "matches stated policy on the marketing site",
-                 """
-                 | spending_by_category          | coupon      | gets_free_shipping? |
-                 |-------------------------------|-------------|---------------------|
-                 | %{shoes: 19_99, pants: 29_99} |             | false               |
-                 | %{shoes: 59_99, pants: 49_99} |             | true                |
-                 | %{socks: 10_99}               |             | true                |
-                 | %{shoes: 19_99}               | "FREE_SHIP" | true                |
-                 """,
-                 %{
-                   spending_by_category: spending_by_category,
-                   coupon: coupon,
-                   gets_free_shipping?: gets_free_shipping?
-                 } do
+    param_test "matches stated policy on the marketing site",
+               """
+               | spending_by_category          | coupon      | gets_free_shipping? |
+               |-------------------------------|-------------|---------------------|
+               | %{shoes: 19_99, pants: 29_99} |             | false               |
+               | %{shoes: 59_99, pants: 49_99} |             | true                |
+               | %{socks: 10_99}               |             | true                |
+               | %{shoes: 19_99}               | "FREE_SHIP" | true                |
+               """,
+               %{
+                 spending_by_category: spending_by_category,
+                 coupon: coupon,
+                 gets_free_shipping?: gets_free_shipping?
+               } do
       shipping_cost = ExampleShippingCalculator.calculate_shipping(spending_by_category, coupon)
       free_shipping? = shipping_cost == 0
       assert free_shipping? == gets_free_shipping?
@@ -56,24 +56,24 @@ defmodule ExampleTestTest do
       %{int_1: int_1 * 2, int_2: int_2 * 2}
     end
 
-    example_test "and allows them to be modified",
-                 """
-                 | int_1 | int_2 |
-                 | 2     | 4     |
-                 """,
-                 %{int_1: int_1, int_2: int_2} do
+    param_test "and allows them to be modified",
+               """
+               | int_1 | int_2 |
+               | 2     | 4     |
+               """,
+               %{int_1: int_1, int_2: int_2} do
       assert int_1 == 4
       assert int_2 == 8
     end
   end
 
   describe "with a very, very, very, very, very, very, very, very, very long `describe` title" do
-    example_test "truncates extremely long contexts to avoid overflowing the atom length limit",
-                 """
-                 | variable_1 | variable_2 |
-                 | "foo"      | "012345678911234567892123456789312345678941234567895123456789612345678971234567898123456789912345678901234567891123456789212345678931234567894123456789512345678961234567897123456789812345678991234567890123456789112345678921234567893123456789412345678951234567896123456789712345678981234567899123456789" |
-                 """,
-                 %{variable_1: variable_1, variable_2: variable_2, test: test} do
+    param_test "truncates extremely long contexts to avoid overflowing the atom length limit",
+               """
+               | variable_1 | variable_2 |
+               | "foo"      | "012345678911234567892123456789312345678941234567895123456789612345678971234567898123456789912345678901234567891123456789212345678931234567894123456789512345678961234567897123456789812345678991234567890123456789112345678921234567893123456789412345678951234567896123456789712345678981234567899123456789" |
+               """,
+               %{variable_1: variable_1, variable_2: variable_2, test: test} do
       assert variable_1 == "foo"
 
       assert variable_2 ==
@@ -89,14 +89,14 @@ defmodule ExampleTestTest do
     end
   end
 
-  @module_examples ExampleTest.parse_examples("""
+  @module_examples ParameterizedTest.parse_examples("""
                    | int_1 | int_2 |
                    | 99    | 100   |
                    """)
 
-  example_test "accepts pre-parsed values from ~x sigil",
-               @module_examples,
-               %{int_1: int_1, int_2: int_2} do
+  param_test "accepts pre-parsed values from ~x sigil",
+             @module_examples,
+             %{int_1: int_1, int_2: int_2} do
     assert int_1 == 99
     assert int_2 == 100
   end

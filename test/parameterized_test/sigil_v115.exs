@@ -1,11 +1,11 @@
-defmodule ExampleTest.SigilTest do
+defmodule ParameterizedTest.SigilTest do
   use ExUnit.Case, async: true
 
-  import ExampleTest
-  import ExampleTest.Sigil
+  import ParameterizedTest
+  import ParameterizedTest.Sigil, only: :sigils
 
   test "basic examples" do
-    assert ~x"""
+    assert ~PARAMS"""
              | plan      | user_permission | can_invite?     |
              | :free     | :admin          | true            |
              | :free     | :editor         | "maybe"         |
@@ -24,7 +24,7 @@ defmodule ExampleTest.SigilTest do
   end
 
   test "discards headers" do
-    assert ~x"""
+    assert ~PARAMS"""
              | plan      | user_permission | can_invite?     |
              |-----------|-----------------|-----------------|
              | :free     | :admin          | true            |
@@ -36,7 +36,7 @@ defmodule ExampleTest.SigilTest do
   end
 
   test "allows any expression" do
-    assert ~x"""
+    assert ~PARAMS"""
              | string               | integer    | keyword_list            |
              | String.upcase("foo") | div(17, 4) | [foo: :bar, baz: :bang] |
            """ == [
@@ -44,12 +44,12 @@ defmodule ExampleTest.SigilTest do
            ]
   end
 
-  example_test "example_test accepts pre-parsed values from ~x sigil",
-               ~x"""
-               | int_1 | int_2 |
-               | 2     | 4     |
-               """,
-               %{int_1: int_1, int_2: int_2} do
+  param_test "param_test accepts pre-parsed values from ~x sigil",
+             ~PARAMS"""
+             | int_1 | int_2 |
+             | 2     | 4     |
+             """,
+             %{int_1: int_1, int_2: int_2} do
     assert int_1 == 2
     assert int_2 == 4
   end

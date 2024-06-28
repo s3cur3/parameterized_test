@@ -1,20 +1,20 @@
-defmodule ExampleTest.MixProject do
+defmodule ParameterizedTest.MixProject do
   use Mix.Project
 
-  @source_url "https://github.com/s3cur3/example_test"
+  @source_url "https://github.com/s3cur3/parameterized_test"
 
   def project do
     [
-      app: :example_test,
-      version: "0.0.1",
+      app: :parameterized_test,
+      version: "0.1.0",
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
       docs: docs(),
-      description: "A utility for defining eminently readable example-based tests in ExUnit",
-      name: "ExampleTest",
+      description: "A utility for defining eminently readable parameterized (or example-based) tests in ExUnit",
+      name: "ParameterizedTest",
       package: package(),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [

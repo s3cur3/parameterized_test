@@ -1,22 +1,22 @@
-defmodule ExampleTest do
+defmodule ParameterizedTest do
   @moduledoc ~S"""
   A utility for defining eminently readable example-based tests.
 
   Example tests look like this:
 
-      example_test "grants free shipping based on the marketing site's stated policy",
-                   \"\"\"
-                   | spending_by_category          | coupon      | gets_free_shipping? |
-                   | %{shoes: 19_99, pants: 29_99} |             | false               |
-                   | %{shoes: 59_99, pants: 49_99} |             | true                |
-                   | %{socks: 10_99}               |             | true                |
-                   | %{pants: 1_99}                | "FREE_SHIP" | true                |
-                   \"\"\",
-                   %{
-                     spending_by_category: spending_by_category,
-                     coupon: coupon,
-                     gets_free_shipping?: gets_free_shipping?
-                   } do
+      param_test "grants free shipping based on the marketing site's stated policy",
+                 \"\"\"
+                 | spending_by_category          | coupon      | gets_free_shipping? |
+                 | %{shoes: 19_99, pants: 29_99} |             | false               |
+                 | %{shoes: 59_99, pants: 49_99} |             | true                |
+                 | %{socks: 10_99}               |             | true                |
+                 | %{pants: 1_99}                | "FREE_SHIP" | true                |
+                 \"\"\",
+                 %{
+                   spending_by_category: spending_by_category,
+                   coupon: coupon,
+                   gets_free_shipping?: gets_free_shipping?
+                 } do
         shipping_cost = ShippingCalculator.calculate_shipping(spending_by_category, coupon)
         free_shipping? = shipping_cost == 0
         assert free_shipping? == gets_free_shipping?
@@ -45,14 +45,16 @@ defmodule ExampleTest do
 
   Use it like:
 
-      example_test "works as expected", examples, %{value: from_context, expected_result: expected_result} do
+      param_test "works as expected", examples, %{value: from_context, expected_result: expected_result} do
         assert something(from_context) == expected_result
       end
   """
-  defmacro example_test(test_name, examples, context_ast \\ %{}, blocks) do
+  defmacro param_test(test_name, examples, context_ast \\ %{}, blocks) do
+    context = Macro.Env.location(__ENV__)
+
     escaped_examples =
       case examples do
-        str when is_binary(str) -> str |> parse_examples() |> Macro.escape()
+        str when is_binary(str) -> str |> parse_examples(context) |> Macro.escape()
         already_escaped when is_tuple(already_escaped) -> already_escaped
       end
 
@@ -68,7 +70,7 @@ defmodule ExampleTest do
           @tag [{key, val}]
         end
 
-        @tag example_test: true
+        @tag param_test: true
         test "#{unquote(test_name)} (#{example |> inspect() |> String.slice(0..unquote(max_context_length))})",
              unquote(context_ast) do
           unquote(blocks)
@@ -77,8 +79,10 @@ defmodule ExampleTest do
     end
   end
 
-  @spec parse_examples(String.t(), Keyword.t()) :: [map()]
-  def parse_examples(table, _opts \\ []) do
+  @typep context :: [{:line, integer} | {:file, String.t()}]
+
+  @spec parse_examples(String.t(), context()) :: [map()]
+  def parse_examples(table, context \\ []) do
     rows =
       table
       |> String.split("\n", trim: true)
@@ -98,18 +102,29 @@ defmodule ExampleTest do
             row
             |> split_cells()
             |> Enum.map(fn cell ->
-              case Code.eval_string(cell) do
-                {val, []} -> val
-                _ -> raise "Failed to evaluate example cell `#{cell}` in row `#{row}`"
+              try do
+                case Code.eval_string(cell) do
+                  {val, []} -> val
+                  _ -> raise "Failed to evaluate example cell `#{cell}` in row `#{row}`"
+                end
+              rescue
+                e ->
+                  reraise "Failed to evaluate example cell `#{cell}` in row `#{row}`. #{inspect(e)}", __STACKTRACE__
               end
             end)
 
           if length(cells) != length(headers) do
+            file_meta =
+              case {context[:file], context[:line]} do
+                {file, line} when is_binary(file) and is_integer(line) -> " (#{file}:#{line})"
+                {nil, nil} -> ""
+              end
+
             raise """
             The number of cells in each row must exactly match the
             number of headers on your example table.
 
-            Problem row:
+            Problem row#{file_meta}:
             #{row}
 
             Expected headers:
@@ -121,6 +136,7 @@ defmodule ExampleTest do
           |> Enum.zip(cells)
           |> Map.new()
         end)
+        |> Enum.reject(&(&1 == %{}))
 
       [] ->
         []

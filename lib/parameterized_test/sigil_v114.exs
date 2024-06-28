@@ -1,12 +1,12 @@
-defmodule ExampleTest.Sigil do
+defmodule ParameterizedTest.Sigil do
   @moduledoc """
   Provides a sigil to wrap parsing of the example test tables.
 
-  Note that on Elixir v1.15.0 and later, the sigil is named `~EXAMPLES`.
+  Note that on Elixir v1.15.0 and later, the sigil is named `~PARAMS`.
   Elixir v1.14 and earlier use `~x` since those versions don't support
   multi-character or uppercase sigils.
 
-  The `example_test` macro automatically parses Markdown-style example tables
+  The `param_test` macro automatically parses Markdown-style example tables
   into a list of maps for use in the test contexts, so this sigil is never
   *required* to be used. However, it may occasionally be useful to do things
   like declare a module attribute which is the pre-parsed example table, or to
@@ -55,6 +55,6 @@ defmodule ExampleTest.Sigil do
   @spec sigil_x(String.t(), Keyword.t()) :: [map()]
   # credo:disable-for-next-line Credo.Check.Readability.FunctionNames
   def sigil_x(table, _opts \\ []) do
-    ExampleTest.parse_examples(table)
+    ParameterizedTest.parse_examples(table)
   end
 end
