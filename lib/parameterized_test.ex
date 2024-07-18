@@ -215,7 +215,7 @@ defmodule ParameterizedTest do
       |> Enum.map(&String.to_atom/1)
 
     rows
-    |> Enum.reject(&separator_row?/1)
+    |> Enum.reject(&separator_or_comment_row?/1)
     |> Enum.map(fn row ->
       cells =
         row
@@ -282,9 +282,11 @@ defmodule ParameterizedTest do
   end
 
   # A regex to match rows consisting of pipes separated by hyphens, like |------|-----|
-  @separator_regex ~r/^\|(-+\|)+$/
+  @separator_regex ~r/^\|( ?-+ ?\|)+$/
 
-  defp separator_row?(row) do
+  defp separator_or_comment_row?("#" <> _), do: true
+
+  defp separator_or_comment_row?(row) do
     Regex.match?(@separator_regex, row)
   end
 
