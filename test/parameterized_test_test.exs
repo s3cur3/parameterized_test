@@ -115,7 +115,7 @@ defmodule ParameterizedTestTest do
       assert String.length(test_name) <= 255
 
       assert test_name ==
-               "test with a very, very, very, very, very, very, very, very, very long `describe` title truncates extremely long contexts to avoid overflowing the atom length limit (%{variable_1: \"foo\", variable_2: \"012345678911234567892123456789312345678941)"
+               "test with a very, very, very, very, very, very, very, very, very long `describe` title truncates extremely long contexts to avoid overflowing the atom length limit row 0"
     end
   end
 

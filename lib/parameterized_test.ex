@@ -116,21 +116,23 @@ defmodule ParameterizedTest do
           already_escaped
       end
 
-    max_describe_length_to_fit_on_one_line = 82
-    test_name_length = String.length(test_name)
-    # Theoretically an atom can be 255 characters, but there's extra stuff appended to the test
-    # name that eats up extra characters.
-    max_context_length = 255 - test_name_length - max_describe_length_to_fit_on_one_line - 22
-
     quote location: :keep do
-      for example <- unquote(escaped_examples) do
+      for {example, index} <- Enum.with_index(unquote(escaped_examples)) do
         for {key, val} <- example do
           @tag [{key, val}]
         end
 
+        un_truncated_name = "#{unquote(test_name)} (#{inspect(example)})"
+
+        full_test_name =
+          if String.length(un_truncated_name) < 255 do
+            un_truncated_name
+          else
+            "#{unquote(test_name)} row #{index}"
+          end
+
         @tag param_test: true
-        test "#{unquote(test_name)} (#{example |> inspect() |> String.slice(0..unquote(max_context_length))})",
-             unquote(context_ast) do
+        test "#{full_test_name}", unquote(context_ast) do
           unquote(blocks)
         end
       end
