@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.0
+
+There are two new features in this release thanks to new contributor @axelson:
+
+* [Support longer test names](https://github.com/s3cur3/parameterized_test/pull/17)
+* [Support comments and Obsidian markdown table format](https://github.com/s3cur3/parameterized_test/pull/16)
+
 ## v0.1.0
 
 - Renamed to `ParameterizedTest`, with the accompanying macro `param_test`.

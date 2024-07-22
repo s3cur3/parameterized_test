@@ -201,7 +201,7 @@ parameterized tests, and property tests for a given piece of functionality.
     ```elixir
     def deps do
       [
-        {:parameterized_test, "~> 0.1.0", only: [:test]},
+        {:parameterized_test, "~> 0.2", oly: [:test]},
       ]
     end
     ```
