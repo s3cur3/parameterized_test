@@ -260,12 +260,12 @@ defmodule ParameterizedTest do
   end
 
   defp eval_cell(cell, row, _context) do
-    case Code.eval_string(cell) do
+    case Code.eval_string(cell, [], log: false) do
       {val, []} -> val
       _ -> raise "Failed to evaluate example cell `#{cell}` in row `#{row}`}"
     end
   rescue
-    _e in [SyntaxError, CompileError] ->
+    _e in [SyntaxError, CompileError, TokenMissingError] ->
       String.trim(cell)
 
     e ->

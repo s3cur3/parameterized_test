@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.1
+
+Bug fix to accept more unquoted strings, including those that have Elixir delimiters in them like quotes, parentheses, etc.
+
 ## v0.3.0
 
 ### New features

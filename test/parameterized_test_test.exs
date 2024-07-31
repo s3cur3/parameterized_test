@@ -155,18 +155,30 @@ defmodule ParameterizedTestTest do
 
   param_test "interprets otherwise unparseable values as strings",
              """
-             |  value  | unquoted string key |
-             |---------|---------------------|
-             |    1    | foo, bar            |
-             |  2 3 4  |                     |
+             |  value  | unquoted string key          |
+             |---------|------------------------------|
+             |    1    | foo, bar & baz               |
+             |  2 3 4  |                              |
+             |  5      | Won't error out              |
+             |  6      | a !@#$%^&*():"_;',./][}{<> z |
+             |  7      |  %{shoes: 19_99,  |
              """,
              %{value: value, "unquoted string key": unquoted} do
     case value do
       1 ->
-        assert unquoted == "foo, bar"
+        assert unquoted == "foo, bar & baz"
 
       "2 3 4" ->
         assert is_nil(unquoted)
+
+      5 ->
+        assert unquoted == "Won't error out"
+
+      6 ->
+        assert unquoted == "a !@#$%^&*():\"_;',./][}{<> z"
+
+      7 ->
+        assert unquoted == "%{shoes: 19_99,"
     end
   end
 
@@ -298,28 +310,10 @@ defmodule ParameterizedTestTest do
     end
   end
 
-  test "fails to compile Markdown rows with invalid Elixir in them" do
-    assert_raise RuntimeError, fn ->
-      defmodule FailToEvaluateBadMarkdownTest do
-        use ExUnit.Case, async: true
-
-        import ParameterizedTest
-
-        param_test "test with invalid Elixir in a cell",
-                   """
-                   | spending_by_category  |
-                   | %{shoes: 19_99,       |
-                   """,
-                   %{gets_free_shipping?: gets_free_shipping?} do
-          assert gets_free_shipping?
-        end
-      end
-    end
-  end
-
   test "fails to compile when the keys in a handrolled list don't all match" do
     assert_raise RuntimeError, fn ->
-      defmodule FailToEvaluateBadMarkdownTest do
+      defmodule FailToEvaluateMismatchedKeys do
+        @moduledoc false
         use ExUnit.Case, async: true
 
         import ParameterizedTest
