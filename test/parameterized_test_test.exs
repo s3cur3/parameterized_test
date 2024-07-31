@@ -153,6 +153,109 @@ defmodule ParameterizedTestTest do
     end
   end
 
+  param_test "interprets otherwise unparseable values as strings",
+             """
+             |  value  | unquoted string key |
+             |---------|---------------------|
+             |    1    | foo, bar            |
+             |  2 3 4  |                     |
+             """,
+             %{value: value, "unquoted string key": unquoted} do
+    case value do
+      1 ->
+        assert unquoted == "foo, bar"
+
+      "2 3 4" ->
+        assert is_nil(unquoted)
+    end
+  end
+
+  describe "user-provided description" do
+    param_test "is supported",
+               """
+               | value | test_description |
+               | 1     | "Lorem ipsum"    |
+               | 2     | "Dolar sit amet" |
+               | 3     |                  |
+               """,
+               %{value: value, test: ex_unit_test_name} do
+      case value do
+        1 ->
+          assert ex_unit_test_name == :"test user-provided description is supported - Lorem ipsum"
+
+        2 ->
+          assert ex_unit_test_name == :"test user-provided description is supported - Dolar sit amet"
+
+        3 ->
+          assert ex_unit_test_name in [
+                   :"test user-provided description is supported (%{value: 3, test_description: nil})",
+                   :"test user-provided description is supported (%{test_description: nil, value: 3})"
+                 ]
+      end
+    end
+
+    param_test "is supported as test_desc",
+               """
+               | value | test_desc        |
+               | 1     | "Lorem ipsum"    |
+               | 2     | "Dolar sit amet" |
+               | 3     |                  |
+               """,
+               %{value: value, test: ex_unit_test_name} do
+      case value do
+        1 ->
+          assert ex_unit_test_name == :"test user-provided description is supported as test_desc - Lorem ipsum"
+
+        2 ->
+          assert ex_unit_test_name == :"test user-provided description is supported as test_desc - Dolar sit amet"
+
+        3 ->
+          assert ex_unit_test_name in [
+                   :"test user-provided description is supported as test_desc (%{value: 3, test_desc: nil})",
+                   :"test user-provided description is supported as test_desc (%{test_desc: nil, value: 3})"
+                 ]
+      end
+    end
+
+    param_test "is supported as description",
+               """
+               | value | description   |
+               | 1     | "Lorem ipsum" |
+               """,
+               %{test: ex_unit_test_name} do
+      assert ex_unit_test_name == :"test user-provided description is supported as description - Lorem ipsum"
+    end
+
+    param_test "is supported as Description",
+               """
+               | value | Description   |
+               | 1     | "Lorem ipsum" |
+               """,
+               %{test: ex_unit_test_name} do
+      assert ex_unit_test_name == :"test user-provided description is supported as Description - Lorem ipsum"
+    end
+
+    param_test "truncates long descriptions",
+               """
+               | value | Description   |
+               | 1     | "This is an extremely long description which goes over the 255 character limit for atom length, blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah" |
+               """,
+               %{test: ex_unit_test_name} do
+      assert ex_unit_test_name ==
+               :"test user-provided description truncates long descriptions - This is an extremely long description which goes over the 255 character limit for atom length, blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah bl"
+    end
+
+    param_test "doesn't require quotes",
+               """
+               | value | description   |
+               | 1     | Lorem ipsum   |
+               """,
+               %{test: ex_unit_test_name} do
+      assert ex_unit_test_name ==
+               :"test user-provided description doesn't require quotes - Lorem ipsum"
+    end
+  end
+
   @module_examples ParameterizedTest.parse_examples("""
                    | int_1 | int_2 |
                    | 99    | 100   |

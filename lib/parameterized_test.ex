@@ -122,13 +122,20 @@ defmodule ParameterizedTest do
           @tag [{key, val}]
         end
 
-        un_truncated_name = "#{unquote(test_name)} (#{inspect(example)})"
+        custom_description =
+          example[:test_desc] || example[:test_description] || example[:description] || example[:Description]
+
+        un_truncated_name =
+          case custom_description do
+            nil -> "#{unquote(test_name)} (#{inspect(example)})"
+            test_name -> "#{unquote(test_name)} - #{test_name}"
+          end
 
         full_test_name =
-          if String.length(un_truncated_name) < 255 do
-            un_truncated_name
-          else
-            "#{unquote(test_name)} row #{index}"
+          cond do
+            String.length(un_truncated_name) <= 212 -> un_truncated_name
+            is_nil(custom_description) -> "#{unquote(test_name)} row #{index}"
+            true -> String.slice(un_truncated_name, 0, 212)
           end
 
         @tag param_test: true
@@ -258,6 +265,9 @@ defmodule ParameterizedTest do
       _ -> raise "Failed to evaluate example cell `#{cell}` in row `#{row}`}"
     end
   rescue
+    _e in [SyntaxError, CompileError] ->
+      String.trim(cell)
+
     e ->
       reraise "Failed to evaluate example cell `#{cell}` in row `#{row}`. #{inspect(e)}", __STACKTRACE__
   end
