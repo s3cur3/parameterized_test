@@ -11,34 +11,42 @@ Parameterized tests let you define variables along a number of dimensions
 and re-run the same test body (including all `setup`) for each 
 combination of variables.
 
-An extremely simple (perhaps too simple!) example:
+A simple example:
 
 ```elixir
 setup context do
   # context.permissions gets set by the param_test below
   permissions = Map.get(context, :permissions, nil)
-  user = AccountsFixtures.user_fixture{permissions: permissions}
+  user = AccountsFixtures.user_fixture(permissions: permissions)
   %{user: user}
 end
 
-param_test "users can view the post regardless of permission level",
+param_test "users with editor permissions or better can edit posts",
            """
-           | permissions |
-           |-------------|
-           | :admin      |
-           | :editor     |
-           | :viewer     |
-           | nil         |
+           | permissions | can_edit? | description                     |
+           |-------------|-----------|---------------------------------|
+           | :admin      | true      | Admins have max permissions     |
+           | :editor     | true      | Editors can edit (of course!)   |
+           | :viewer     | false     | Viewers are read-only           |
+           | nil         | false     | Anonymous viewers are read-only |
            """,
-           %{user: user, permissions: permissions} do
-  assert Posts.can_view?(user), "User with #{permissions} permissions should be able to view"
+           %{user: user, permissions: permissions, can_edit?: can_edit?} do
+  assert Posts.can_edit?(user) == can_edit?, "#{permissions} permissions should grant edit rights"
 end
 ```
 
-That test will run 4 times, with the `:permissions` variable from the table 
-being applied to the test's context each time (and therefore being made
-available to the `setup` handler). Thus, under the hood this generates
-four unique tests, equivalent to doing something like this:
+That test will run 4 times, with the variables from from the table being applied 
+to the test's context each time (and therefore being made
+available to the `setup` handler). These variables are:
+
+- `:permissions` 
+- `:can_edit?`
+- the special `:description` variable (see
+  [About test names, and improving debuggability](#about-test-names-and-improving-debuggability)
+  for how this is used)
+
+Thus, under the hood this generates four unique tests,
+equivalent to doing something like this:
 
 ```elixir
 setup context do
@@ -47,74 +55,55 @@ setup context do
   %{user: user}
 end
 
-for permission <- [:admin, :editor, :viewer, nil] do
-  @permission permission
+for {permissions, can_edit?, description} <- [
+        {:admin,  true,  "Admins have max permissions"},
+        {:editor, true,  "Editors can edit (of course!)"},
+        {:viewer, false, "Viewers are read-only"},
+        {nil,     false, "Anonymous viewers are read-only"}
+      ] do
+    @permissions permissions
+    @can_edit? can_edit?
+    @description description
 
-  @tag permission: @permission
-  test "users with #{@permission} can view the post", %{user: user} do
-    assert Posts.can_view?(user)
+    @tag permissions: @permissions
+    @tag can_edit?: @can_edit?
+    @tag description: @description
+    test "users with at least editor permissions can edit posts — #{@description}", %{user: user} do
+      assert Posts.can_edit?(user) == @can_edit?
+    end
   end
 end
 ```
 
-Of course, that example only had a single variable, so you could argue
-the `for` version is cleaner. But `parameterized_test` supports an arbitrary
-number of variables, so you can describe complex business rules like
-"users get free shipping if they spend more than $100, or if they buy
-socks, or if they have the right coupon code":
+As you can see, even with only 3 variables (just 2 that impact the test semantics!),
+the `for` comprehension comes with a lot of boilerplate. But the `param_test`
+macro supports an arbitrary number of variables, so you can describe complex
+business rules like "users get free shipping if they spend more than $100,
+or if they buy socks, or if they have the right coupon code":
 
 ```elixir
 param_test "grants free shipping based on the marketing site's stated policy",
             """
-            | spending_by_category          | coupon      | gets_free_shipping? |
-            |-------------------------------|-------------|---------------------|
-            | %{shoes: 19_99, pants: 29_99} |             | false               |
-            | %{shoes: 59_99, pants: 49_99} |             | true                |
-            | %{socks: 10_99}               |             | true                |
-            | %{pants: 1_99}                | "FREE_SHIP" | true                |
+            | spending_by_category          | coupon      | ships_free? | description      |
+            |-------------------------------|-------------|-------------|------------------|
+            | %{shoes: 19_99, pants: 29_99} |             | false       | Spent too little |
+            | %{shoes: 59_99, pants: 49_99} |             | true        | Spent over $100  |
+            | %{socks: 10_99}               |             | true        | Socks ship free  |
+            | %{pants: 1_99}                | "FREE_SHIP" | true        | Correct coupon   |
+            | %{pants: 1_99}                | "FOO"       | false       | Incorrect coupon |
             """,
             %{
                spending_by_category: spending_by_category,
                coupon: coupon,
-               gets_free_shipping?: gets_free_shipping?
+               ships_free?: ships_free?
              } do
-  shipping_cost = ShippingCalculator.calculate_shipping(spending_by_category, coupon)
-  free_shipping? = shipping_cost == 0
-  assert free_shipping? == gets_free_shipping?
-end
-```
-
-## "I hate the Markdown table syntax!"
-
-No sweat, you don't have to use it. You can instead pass a hand-rolled list of
-parameters to the `param_test` macro, like this:
-
-```elixir
-param_test "shipping policy matches the web site",
-            [
-              # Items in the parameters list can be either maps...
-              %{spending_by_category: %{pants: 29_99}, coupon: "FREE_SHIP"},
-              # ...or keyword lists
-              [spending_by_category: %{shoes: 19_99, pants: 29_99}, coupon: nil]
-            ],
-            %{spending_by_category: spending_by_category, coupon: coupon} do
-  ...
-end
-```
-
-Just make sure that each item in the parameters list has the same keys.
-
-The final option is to pass a path to a *file* that contains your test parameters (we currently support `.md`/`.markdown`, `.csv`, and `.tsv` files), like this:
-
-```elixir
-param_test "pull test parameters from a file",
-            "test/fixtures/params.md",
-            %{
-              spending_by_category: spending_by_category,
-              coupon: coupon,
-              gets_free_shipping?: gets_free_shipping?
-            } do
-  ...
+  shipping_cost = ShippingCalculator.calculate(spending_by_category, coupon)
+  
+  if ships_free? do
+    assert shipping_cost == 0
+  else
+    assert shipping_cost > 0
+  end
 end
 ```
 
@@ -210,7 +199,10 @@ parameterized tests, and property tests for a given piece of functionality.
    to the top of your test module, and using the `param_test` macro.
 
    You can optionally include a separator between the header and body
-   of the table (like `|--------|-------|`).
+   of the table (like `|--------|-------|`), and a `description` column
+   to improve the errors you get when your test fails (see
+   [About test names, and improving debuggability](#about-test-names-and-improving-debuggability)
+   for more on descriptions).
 
    The header of your table will be parsed as atoms to pass into your
    test context. The body cells of the table can be any valid Elixir 
@@ -226,8 +218,8 @@ parameterized tests, and property tests for a given piece of functionality.
       param_test "behaves as expected",
                  """
                  | variable_1       | variable_2           | etc     |
-                 |------------------|----------------------|---------|
-                 | %{foo: :bar}     | div(19, 3)           | false   | 
+                 | ---------------- | -------------------- | ------- |
+                 | %{foo: :bar}     | div(19, 3)           | false   |
                  | "bip bop"        | String.upcase("foo") | true    |
                  | ["whiz", "bang"] | :ok                  |         |
                  |                  | nil                  | "maybe" |
@@ -242,11 +234,14 @@ parameterized tests, and property tests for a given piece of functionality.
     end
     ```
 
-## About test names
 
-ExUnit requires each test in a module to have a unique name. To that end,
-ParameterizedTest appends a stringified version of the parameters passed
-to your test to the name you give the test. Consider this test:
+
+## About test names, and improving debuggability
+
+ExUnit requires each test in a module to have a unique name. By default,
+without a `description` for the rows in your parameters table, 
+`ParameterizedTest` appends a stringified version of the parameters
+passed to your test to the name you give the test. Consider this test:
 
 ```elixir
 param_test "checks equality",
@@ -276,4 +271,101 @@ And if you ran this test, you'd get an error that looks like this:
      right: :c
      stacktrace:
        test/my_module_test.exs:11: (test)
+```
+
+You can improve the names in the failure cases by providing a `description`
+column. When provided, that column will be used in the name. You may want
+to use this to explain *why* this combination of values should produce
+the expected outcome; for instance:
+
+```elixir
+param_test "grants free shipping for spending $99 or more, or with coupon FREE_SHIP",
+           """
+           | total_cents | coupon      | free? | description                 |
+           | ----------- | ----------- | ----- | --------------------------- |
+           | 98_99       |             | false | Spent too little            |
+           | 99_00       |             | true  | Min for free shipping       |
+           | 99_01       |             | true  | Spent more than the minimum |
+           | 1_00        | "FREE_SHIP" | true  | Had the right coupon        |
+           | 1_00        | "FOO"       | false | Unrecognized coupon         |
+           """, %{total_cents: total_cents, coupon: coupon, free?: gets_free_shipping?} do
+  shipping_cost = ShippingCalculator.calculate(total_cents, coupon)
+  free_shipping? = shipping_cost == 0
+  assert free_shipping? == gets_free_shipping?
+end
+```
+
+Suppose in your `ShippingCalculator` implementation, you mistakenly set 
+the free shipping threshold to be _greater_ than $99.00, when your web site's
+state policy was $99 or more. You'd get an error when running this test that
+looks like this (note the first line ends with "Spent the min. for free shipping" from the `description` column):
+
+```
+  1) test grants free shipping for spending $99 or more, or with coupon FREE_SHIP - Spent the min. for free shipping (ShippingCalculatorTest)
+     test/shipping/shipping_calculator_test.exs:34
+     Assertion with == failed
+     code:  assert free_shipping? == gets_free_shipping?
+     left:  false
+     right: true
+     stacktrace:
+       test/shipping/shipping_calculator_test.exs:47: (test)
+```
+
+
+## Objections
+
+### Why not just use the new `:parameterize` feature built into ExUnit in Elixir 1.18?
+
+Both this package and the
+[new, built-in parameterization](https://hexdocs.pm/ex_unit/main/ExUnit.Case.html#module-parameterized-tests)
+do similar things: they re-run the same test body with a different set of
+parameters. However, the built-in parameterization works by re-running 
+your entire test module with each parameter set, so it's primarily aimed
+at cases where the tests should work the same regardless of the parameters.
+(The docs give the example of testing the `Registry` module and expecting
+it to behave the same regardless of how many partitions are used.)
+
+In contrast, the `param_test` macro is designed to use different parameters
+on a per-test basis, and it's expected that the parameters will cause different
+behavior between the test runs (and you'd generally expect to see one column
+that describes what the results should be).
+
+Finally, of course, there's the format of a `param_test`. The tabular, often
+quite human-friendly format encourages collaboration with less technical
+people on your team; your product manager may not be able to read a `for`
+comprehension, but if you link them to a Markdown table on GitHub that shows
+the test cases you've covered, they can probably make sense of them.
+
+### "I hate the Markdown table syntax!"
+
+No sweat, you don't have to use it. You can instead pass a hand-rolled list of
+parameters to the `param_test` macro, like this:
+
+```elixir
+param_test "shipping policy matches the web site",
+            [
+              # Items in the parameters list can be either maps...
+              %{spending_by_category: %{pants: 29_99}, coupon: "FREE_SHIP"},
+              # ...or keyword lists
+              [spending_by_category: %{shoes: 19_99, pants: 29_99}, coupon: nil]
+            ],
+            %{spending_by_category: spending_by_category, coupon: coupon} do
+  ...
+end
+```
+
+Just make sure that each item in the parameters list has the same keys.
+
+The final option is to pass a path to a *file* that contains your test parameters (we currently support `.md`/`.markdown`, `.csv`, and `.tsv` files), like this:
+
+```elixir
+param_test "pull test parameters from a file",
+            "test/fixtures/params.md",
+            %{
+              spending_by_category: spending_by_category,
+              coupon: coupon,
+              gets_free_shipping?: gets_free_shipping?
+            } do
+  ...
+end
 ```

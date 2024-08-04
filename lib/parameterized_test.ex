@@ -9,20 +9,21 @@ defmodule ParameterizedTest do
 
       param_test "grants free shipping based on the marketing site's stated policy",
                  \"\"\"
-                 | spending_by_category          | coupon      | gets_free_shipping? |
-                 | %{shoes: 19_99, pants: 29_99} |             | false               |
-                 | %{shoes: 59_99, pants: 49_99} |             | true                |
-                 | %{socks: 10_99}               |             | true                |
-                 | %{pants: 1_99}                | "FREE_SHIP" | true                |
+                 | spending_by_category          | coupon      | ships_free? | description      |
+                 |-------------------------------|-------------|-------------|------------------|
+                 | %{shoes: 19_99, pants: 29_99} |             | false       | Spent too little |
+                 | %{shoes: 59_99, pants: 49_99} |             | true        | Spent $100+      |
+                 | %{socks: 10_99}               |             | true        | Socks ship free  |
+                 | %{pants: 1_99}                | "FREE_SHIP" | true        | Correct coupon   |
                  \"\"\",
                  %{
                    spending_by_category: spending_by_category,
                    coupon: coupon,
-                   gets_free_shipping?: gets_free_shipping?
+                   ships_free?: ships_free?
                  } do
         shipping_cost = ShippingCalculator.calculate_shipping(spending_by_category, coupon)
         free_shipping? = shipping_cost == 0
-        assert free_shipping? == gets_free_shipping?
+        assert free_shipping? == ships_free?
       end
 
   Alternatively, if you don't like the Markdown table format, you can supply a
