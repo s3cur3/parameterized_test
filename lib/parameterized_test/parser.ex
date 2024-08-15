@@ -1,6 +1,5 @@
 defmodule ParameterizedTest.Parser do
   @moduledoc false
-
   @typep context :: [{:line, integer} | {:file, String.t()}]
 
   @spec parse_examples(String.t() | list, context()) :: [map()]
@@ -28,6 +27,41 @@ defmodule ParameterizedTest.Parser do
     end
   end
 
+  @spec parse_file_path_examples(String.t(), context()) :: [map()]
+  def parse_file_path_examples(path, context) do
+    file = File.read!(path)
+
+    case path |> Path.extname() |> String.downcase() do
+      md when md in [".md", ".markdown"] -> parse_examples(file, context)
+      ".csv" -> parse_csv_file(file, context)
+      ".tsv" -> parse_tsv_file(file, context)
+      _ -> raise "Unsupported file extension for parameterized tests #{path} #{file_meta(context)}"
+    end
+  end
+
+  @spec full_test_name(String.t(), map(), integer, integer) :: String.t()
+  def full_test_name(original_test_name, example, row_index, max_chars) do
+    custom_description = description(example)
+
+    un_truncated_name =
+      case custom_description do
+        nil -> "#{original_test_name} (#{inspect(example)})"
+        desc -> "#{original_test_name} - #{desc}"
+      end
+
+    cond do
+      String.length(un_truncated_name) <= max_chars -> un_truncated_name
+      is_nil(custom_description) -> "#{original_test_name} row #{row_index}"
+      true -> String.slice(un_truncated_name, 0, max_chars)
+    end
+  end
+
+  defp description(%{test_description: desc}), do: desc
+  defp description(%{test_desc: desc}), do: desc
+  defp description(%{description: desc}), do: desc
+  defp description(%{Description: desc}), do: desc
+  defp description(_), do: nil
+
   defp parse_hand_rolled_table(evaled_table, context) do
     parsed_table = Enum.map(evaled_table, &Map.new/1)
 
@@ -43,18 +77,6 @@ defmodule ParameterizedTest.Parser do
     end
 
     parsed_table
-  end
-
-  @spec parse_file_path_examples(String.t(), context()) :: [map()]
-  def parse_file_path_examples(path, context) do
-    file = File.read!(path)
-
-    case path |> Path.extname() |> String.downcase() do
-      md when md in [".md", ".markdown"] -> parse_examples(file, context)
-      ".csv" -> parse_csv_file(file, context)
-      ".tsv" -> parse_tsv_file(file, context)
-      _ -> raise "Unsupported file extension for parameterized tests #{path} #{file_meta(context)}"
-    end
   end
 
   defp parse_csv_file(file, context) do

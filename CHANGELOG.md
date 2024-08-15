@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.4.0
+
+- Adds a new `param_feature` macro, which wraps Wallaby's `feature` tests
+  the same way `param_test` wraps ExUnit's `test`.
+
+  (While you _can_ use the plain `param_test` macro in a test module that
+  contains `use Wallaby.Feature`, doing so will break some Wallaby features
+  including screenshot generation on failure.)
+- Moves the `parse_examples/2` function, an implementation detail for the
+  `param_test` macro, into a new private module `ParameterizedTest.Parser`.
+
 ## v0.3.1
 
 Bug fix to accept more unquoted strings, including those that have Elixir delimiters in them like quotes, parentheses, etc.

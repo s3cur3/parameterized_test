@@ -1,5 +1,6 @@
 defmodule ParameterizedTestTest do
   use ExUnit.Case, async: true
+  use Wallaby.Feature
 
   import ParameterizedTest
 
@@ -330,5 +331,18 @@ defmodule ParameterizedTestTest do
         end
       end
     end
+  end
+
+  param_feature "supports Wallaby tests",
+                """
+                | text     | url                  |
+                |----------|----------------------|
+                | "GitHub" | "https://github.com" |
+                | "Google" | "https://google.com" |
+                """,
+                %{session: session, text: text, url: url} do
+    session
+    |> visit(url)
+    |> assert_has(Wallaby.Query.text(text, minimum: 1))
   end
 end

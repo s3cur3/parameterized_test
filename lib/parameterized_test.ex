@@ -2,7 +2,7 @@ NimbleCSV.define(ParameterizedTest.TsvParser, separator: "\t", escape: "\"")
 NimbleCSV.define(ParameterizedTest.CsvParser, separator: ",", escape: "\"")
 
 defmodule ParameterizedTest do
-  @moduledoc ~S"""
+  @moduledoc """
   A utility for defining eminently readable parameterized (or example-based) tests.
 
   Parameterized tests look like this:
@@ -14,7 +14,7 @@ defmodule ParameterizedTest do
                  | %{shoes: 19_99, pants: 29_99} |             | false       | Spent too little |
                  | %{shoes: 59_99, pants: 49_99} |             | true        | Spent $100+      |
                  | %{socks: 10_99}               |             | true        | Socks ship free  |
-                 | %{pants: 1_99}                | "FREE_SHIP" | true        | Correct coupon   |
+                 | %{pants: 1_99}                | \"FREE_SHIP\" | true        | Correct coupon   |
                  \"\"\",
                  %{
                    spending_by_category: spending_by_category,
@@ -82,41 +82,28 @@ defmodule ParameterizedTest do
 
   Use it like:
 
-      param_test "works as expected", your_parameters, %{value: from_context, expected_result: expected_result} do
-        assert MyModule.process(from_context) == expected_result
+      param_test \"grants free shipping for spending $99+ or with coupon FREE_SHIP\",
+                 \"\"\"
+                 | total_cents | ships_free? | description                 |
+                 | ----------- | ----------- | --------------------------- |
+                 | 98_99       | false       | Spent too little            |
+                 | 99_00       | true        | Min for free shipping       |
+                 | 99_01       | true        | Spent more than the minimum |
+                 \"\"\",
+                 %{total_cents: total_cents, ships_free?: ships_free?} do
+        shipping_cost = ShippingCalculator.calculate(total_cents)
+
+        if ships_free? do
+          assert shipping_cost == 0
+        else
+          assert shipping_cost > 0
+        end
       end
+
   """
   defmacro param_test(test_name, examples, context_ast \\ %{}, blocks) do
     context = Macro.Env.location(__ENV__)
-
-    escaped_examples =
-      case examples do
-        str when is_binary(str) ->
-          file_extension =
-            str
-            |> Path.extname()
-            |> String.downcase()
-
-          case file_extension do
-            ext when ext in [".md", ".markdown", ".csv"] ->
-              str
-              |> Parser.parse_file_path_examples(context)
-              |> Macro.escape()
-
-            _ ->
-              str
-              |> Parser.parse_examples(context)
-              |> Macro.escape()
-          end
-
-        list when is_list(list) ->
-          list
-          |> Parser.parse_examples(context)
-          |> Macro.escape()
-
-        already_escaped when is_tuple(already_escaped) ->
-          already_escaped
-      end
+    escaped_examples = escape_examples(examples, context)
 
     quote location: :keep do
       for {example, index} <- Enum.with_index(unquote(escaped_examples)) do
@@ -124,27 +111,87 @@ defmodule ParameterizedTest do
           @tag [{key, val}]
         end
 
-        custom_description =
-          example[:test_desc] || example[:test_description] || example[:description] || example[:Description]
-
-        un_truncated_name =
-          case custom_description do
-            nil -> "#{unquote(test_name)} (#{inspect(example)})"
-            test_name -> "#{unquote(test_name)} - #{test_name}"
-          end
-
-        full_test_name =
-          cond do
-            String.length(un_truncated_name) <= 212 -> un_truncated_name
-            is_nil(custom_description) -> "#{unquote(test_name)} row #{index}"
-            true -> String.slice(un_truncated_name, 0, 212)
-          end
+        unquoted_test_name = unquote(test_name)
+        full_test_name = ParameterizedTest.Parser.full_test_name(unquoted_test_name, example, index, 212)
 
         @tag param_test: true
         test "#{full_test_name}", unquote(context_ast) do
           unquote(blocks)
         end
       end
+    end
+  end
+
+  if Code.ensure_loaded?(Wallaby) do
+    @doc """
+    Defines Wallaby feature tests that use your parameters or example data.
+
+    This is to the Wallaby `feature` macro as `param_test` is to `test`.
+
+    Use it like this:
+
+        param_feature \"supports Wallaby tests\",
+                      \"\"\"
+                      | text     | url                  |
+                      |----------|----------------------|
+                      | \"GitHub\" | \"https://github.com\" |
+                      | \"Google\" | \"https://google.com\" |
+                      \"\"\",
+                      %{session: session, text: text, url: url} do
+          session
+          |> visit(url)
+          |> assert_has(Wallaby.Query.text(text, minimum: 1))
+        end
+    """
+    defmacro param_feature(test_name, examples, context_ast \\ %{}, blocks) do
+      context = Macro.Env.location(__ENV__)
+      escaped_examples = escape_examples(examples, context)
+
+      quote location: :keep do
+        for {example, index} <- Enum.with_index(unquote(escaped_examples)) do
+          for {key, val} <- example do
+            @tag [{key, val}]
+          end
+
+          unquoted_test_name = unquote(test_name)
+          @full_test_name ParameterizedTest.Parser.full_test_name(unquoted_test_name, example, index, 212)
+
+          @tag param_test: true
+          feature "#{@full_test_name}", unquote(context_ast) do
+            unquote(blocks)
+          end
+        end
+      end
+    end
+  end
+
+  defp escape_examples(examples, context) do
+    case examples do
+      str when is_binary(str) ->
+        file_extension =
+          str
+          |> Path.extname()
+          |> String.downcase()
+
+        case file_extension do
+          ext when ext in [".md", ".markdown", ".csv"] ->
+            str
+            |> Parser.parse_file_path_examples(context)
+            |> Macro.escape()
+
+          _ ->
+            str
+            |> Parser.parse_examples(context)
+            |> Macro.escape()
+        end
+
+      list when is_list(list) ->
+        list
+        |> Parser.parse_examples(context)
+        |> Macro.escape()
+
+      already_escaped when is_tuple(already_escaped) ->
+        already_escaped
     end
   end
 end

@@ -35,7 +35,7 @@ jobs:
           build-flags: --all-warnings --warnings-as-errors
 
       - name: Run Tests
-        run: mix coveralls.json --warnings-as-errors
+        run: mix coveralls.json --warnings-as-errors --include feature --include integration
         if: always()
 
       # Optional, but Codecov has a bot that will comment on your PR with per-file
