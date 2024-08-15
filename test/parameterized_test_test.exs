@@ -268,7 +268,7 @@ defmodule ParameterizedTestTest do
     end
   end
 
-  @module_examples ParameterizedTest.parse_examples("""
+  @module_examples ParameterizedTest.Parser.parse_examples("""
                    | int_1 | int_2 |
                    | 99    | 100   |
                    """)
@@ -328,14 +328,6 @@ defmodule ParameterizedTestTest do
           assert int_1 in [99, 101]
           assert int_2 in [100, 102]
         end
-      end
-    end
-  end
-
-  describe "parse_examples/1" do
-    test "accepts strings that parse as empty" do
-      for empty <- ["", " ", "\n", "\t", "\r\n", "\n\n \r\n \t \r"] do
-        assert ParameterizedTest.parse_examples(empty) == []
       end
     end
   end
