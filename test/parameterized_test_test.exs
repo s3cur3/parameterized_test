@@ -331,5 +331,4 @@ defmodule ParameterizedTestTest do
       end
     end
   end
-
 end
