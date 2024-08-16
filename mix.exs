@@ -6,7 +6,7 @@ defmodule ParameterizedTest.MixProject do
   def project do
     [
       app: :parameterized_test,
-      version: "0.3.1",
+      version: "0.4.0",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -77,6 +77,8 @@ defmodule ParameterizedTest.MixProject do
   defp deps do
     List.flatten(
       [
+        # Optional: supports doing parameterization over Wallaby `feature` tests
+        {:wallaby, ">= 0.0.0", optional: true},
         {:nimble_csv, "~> 1.1"},
         {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
 

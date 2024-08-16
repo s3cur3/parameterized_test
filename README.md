@@ -107,6 +107,12 @@ param_test "grants free shipping based on the marketing site's stated policy",
 end
 ```
 
+The package also provides a second macro, `param_feature`, which wraps
+Wallaby's `feature` tests the same way `param_test` wraps ExUnit's `test`.
+(While you _can_ use the plain `param_test` macro in a test module that
+contains `use Wallaby.Feature`, doing so will break some Wallaby features
+including screenshot generation on failure.)
+
 ## Why parameterized testing?
 
 Parameterized testing reduces toil associated with writing tests that cover
