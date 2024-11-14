@@ -2,12 +2,14 @@ defmodule ParameterizedTest.Formatter do
   @moduledoc false
   @behaviour Mix.Tasks.Format
 
+  @impl Mix.Tasks.Format
   def features(_opts) do
     sigil = if Version.match?(System.version(), "< 1.15.0"), do: :x, else: :PARAMS
 
     [sigils: [sigil], extensions: []]
   end
 
+  @impl Mix.Tasks.Format
   def format(contents, _opts) do
     contents
     |> ParameterizedTest.Parser.example_table_ast()

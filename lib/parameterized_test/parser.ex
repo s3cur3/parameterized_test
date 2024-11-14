@@ -69,7 +69,7 @@ defmodule ParameterizedTest.Parser do
     table
     |> String.split("\n", trim: true)
     |> Enum.map(&String.trim/1)
-    |> sigil_ast_rows(context)
+    |> table_ast_rows(context)
   end
 
   defp description(%{test_description: desc}), do: desc
@@ -181,13 +181,13 @@ defmodule ParameterizedTest.Parser do
     end
   end
 
-  defp sigil_ast_rows([header | _] = all_rows, context) do
+  defp table_ast_rows([header | _] = all_rows, context) do
     headers = split_cells(header)
 
     Enum.map(all_rows, fn row ->
       row
       |> classify_row()
-      |> rare_parse_row()
+      |> ast_parse_row()
       |> tap(fn
         {:cells, cells} -> check_cell_count(cells, headers, row, context)
         _ -> nil
@@ -206,10 +206,10 @@ defmodule ParameterizedTest.Parser do
     {type, row}
   end
 
-  defp rare_parse_row({:cells, row}), do: {:cells, split_cells(row)}
-  defp rare_parse_row({:comment, _} = row), do: row
+  defp ast_parse_row({:cells, row}), do: {:cells, split_cells(row)}
+  defp ast_parse_row({:comment, _} = row), do: row
 
-  defp rare_parse_row({:separator, row}) do
+  defp ast_parse_row({:separator, row}) do
     padding = if String.contains?(row, " "), do: :padded, else: :unpadded
     {:separator, padding}
   end
