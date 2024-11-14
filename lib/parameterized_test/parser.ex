@@ -56,6 +56,22 @@ defmodule ParameterizedTest.Parser do
     end
   end
 
+  # Returns an AST of sorts (not an offical Elixir AST) representing an example
+  # table created with heredocs or a sigil, with the intended consumer being
+  # the sigil formatter
+  @spec example_table_ast(String.t(), list()) ::
+          [
+            {:cells, [String.t()]},
+            {:separator, :padded | :unpadded},
+            {:comment, String.t()}
+          ]
+  def example_table_ast(table, context \\ []) when is_binary(table) do
+    table
+    |> String.split("\n", trim: true)
+    |> Enum.map(&String.trim/1)
+    |> sigil_ast_rows(context)
+  end
+
   defp description(%{test_description: desc}), do: desc
   defp description(%{test_desc: desc}), do: desc
   defp description(%{description: desc}), do: desc
@@ -165,20 +181,53 @@ defmodule ParameterizedTest.Parser do
     end
   end
 
+  defp sigil_ast_rows([header | _] = all_rows, context) do
+    headers = split_cells(header)
+
+    Enum.map(all_rows, fn row ->
+      row
+      |> classify_row()
+      |> rare_parse_row()
+      |> tap(fn
+        {:cells, cells} -> check_cell_count(cells, headers, row, context)
+        _ -> nil
+      end)
+    end)
+  end
+
+  defp classify_row(row) do
+    type =
+      cond do
+        separator_row?(row) -> :separator
+        comment_row?(row) -> :comment
+        true -> :cells
+      end
+
+    {type, row}
+  end
+
+  defp rare_parse_row({:cells, row}), do: {:cells, split_cells(row)}
+  defp rare_parse_row({:comment, _} = row), do: row
+
+  defp rare_parse_row({:separator, row}) do
+    padding = if String.contains?(row, " "), do: :padded, else: :unpadded
+    {:separator, padding}
+  end
+
   defp split_cells(row) do
     row
     |> String.split("|", trim: true)
     |> Enum.map(&String.trim/1)
   end
 
+  defp separator_or_comment_row?(row), do: separator_row?(row) or comment_row?(row)
+
+  defp comment_row?(row), do: String.starts_with?(row, "#")
+
   # A regex to match rows consisting of pipes separated by hyphens, like |------|-----|
   @separator_regex ~r/^\|( ?-+ ?\|)+$/
 
-  defp separator_or_comment_row?("#" <> _), do: true
-
-  defp separator_or_comment_row?(row) do
-    Regex.match?(@separator_regex, row)
-  end
+  defp separator_row?(row), do: Regex.match?(@separator_regex, row)
 
   defp file_meta(%{file: file, line: line}) when is_binary(file) and is_integer(line) do
     " (#{file}:#{line})"

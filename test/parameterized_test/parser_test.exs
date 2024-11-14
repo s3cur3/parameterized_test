@@ -8,4 +8,24 @@ defmodule ParameterizedTest.ParserTest do
       end
     end
   end
+
+  describe "example_table_ast/1" do
+    test "returns a representation of the raw values in an example table" do
+      assert ParameterizedTest.Parser.example_table_ast("""
+             | a        | b           |
+             |----------|-------------|
+             | "string" | :atom       |
+             # comment
+             | 123      | %{d: [1.0]} |
+             |          | ""          |
+             """) == [
+               {:cells, ["a", "b"]},
+               {:separator, :unpadded},
+               {:cells, ["\"string\"", ":atom"]},
+               {:comment, "# comment"},
+               {:cells, ["123", "%{d: [1.0]}"]},
+               {:cells, ["", "\"\""]}
+             ]
+    end
+  end
 end
