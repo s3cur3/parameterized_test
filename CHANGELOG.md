@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.5.0
+
+- New Mix formatter plugin for formatting the package's sigils, courtesy of @rschenk (🎉). To enable it, in your `formatter.exs`, add to following:
+    ```elixir
+      plugins: [
+        ParameterizedTest.Formatter,
+      ],
+    ```
+You can see a brief video demo [on the PR](https://github.com/s3cur3/parameterized_test/pull/32).
+- Fixed an issue (#31) where `mix test --failed` could fail to run previously-failing tests because the way we were adding the parameters to the name (as a map) was not stable across runs. The consequence of this change is that the names of tests missing a description will change from listing parameters as maps to lists.
+    - Example: suppose you previously have a `param_test` called `"checks equality"` with parameters `val_1: :a` and `val_b: :b`. It would previously have been given the full name `"checks equality (%{val_1: :a, val_2: :b})"` *or* `"checks equality (%{val_2: :b, val_1: :a})"`, and which you saw would change between test runs. In this release, it will consistently be given the name `"checks equality ([val_1: :a, val_2: :b])"`.
+
 ## v0.4.0
 
 - Adds a new `param_feature` macro, which wraps Wallaby's `feature` tests

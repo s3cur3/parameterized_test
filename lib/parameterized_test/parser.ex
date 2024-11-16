@@ -72,6 +72,12 @@ defmodule ParameterizedTest.Parser do
     |> table_ast_rows(context)
   end
 
+  defp description(kw_list) when is_list(kw_list) do
+    kw_list
+    |> Map.new()
+    |> description()
+  end
+
   defp description(%{test_description: desc}), do: desc
   defp description(%{test_desc: desc}), do: desc
   defp description(%{description: desc}), do: desc
@@ -79,9 +85,9 @@ defmodule ParameterizedTest.Parser do
   defp description(_), do: nil
 
   defp parse_hand_rolled_table(evaled_table, context) do
-    parsed_table = Enum.map(evaled_table, &Map.new/1)
+    parsed_table = Enum.map(evaled_table, &Keyword.new/1)
 
-    keys = MapSet.new(parsed_table, &Map.keys/1)
+    keys = MapSet.new(parsed_table, &Keyword.keys/1)
 
     if MapSet.size(keys) > 1 do
       raise """
@@ -127,11 +133,9 @@ defmodule ParameterizedTest.Parser do
 
       check_cell_count(cells, headers, row, context)
 
-      headers
-      |> Enum.zip(cells)
-      |> Map.new()
+      Enum.zip(headers, cells)
     end)
-    |> Enum.reject(&(&1 == %{}))
+    |> Enum.reject(&Enum.empty?/1)
   end
 
   defp parse_csv_rows(rows, context)
@@ -146,11 +150,9 @@ defmodule ParameterizedTest.Parser do
 
       check_cell_count(cells, headers, row, context)
 
-      headers
-      |> Enum.zip(cells)
-      |> Map.new()
+      Enum.zip(headers, cells)
     end)
-    |> Enum.reject(&(&1 == %{}))
+    |> Enum.reject(&Enum.empty?/1)
   end
 
   defp eval_cell(cell, row, _context) do

@@ -263,13 +263,13 @@ end
 
 Under the hood, this produces two tests with the names:
 
-- `"checks equality (%{val_1: :a, val_b: :a})"`
-- `"checks equality (%{val_1: :b, val_b: :c})"`
+- `"checks equality ([val_1: :a, val_b: :a])"`
+- `"checks equality ([val_1: :b, val_b: :c])"`
 
 And if you ran this test, you'd get an error that looks like this:
 
 ```
-  1) test checks equality (%{val_1: :b, val_2: :c}) (MyModuleTest)
+  1) test checks equality ([val_1: :b, val_2: :c]) (MyModuleTest)
      test/my_module_test.exs:4
      Assertion with == failed
      code:  assert val_1 == val_2
