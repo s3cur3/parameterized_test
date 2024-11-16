@@ -201,8 +201,8 @@ defmodule ParameterizedTestTest do
 
         3 ->
           assert ex_unit_test_name in [
-                   :"test user-provided description is supported (%{value: 3, test_description: nil})",
-                   :"test user-provided description is supported (%{test_description: nil, value: 3})"
+                   :"test user-provided description is supported ([value: 3, test_description: nil])",
+                   :"test user-provided description is supported ([test_description: nil, value: 3])"
                  ]
       end
     end
@@ -224,8 +224,8 @@ defmodule ParameterizedTestTest do
 
         3 ->
           assert ex_unit_test_name in [
-                   :"test user-provided description is supported as test_desc (%{value: 3, test_desc: nil})",
-                   :"test user-provided description is supported as test_desc (%{test_desc: nil, value: 3})"
+                   :"test user-provided description is supported as test_desc ([value: 3, test_desc: nil])",
+                   :"test user-provided description is supported as test_desc ([test_desc: nil, value: 3])"
                  ]
       end
     end
