@@ -14,12 +14,12 @@ defmodule ParameterizedTest.SigilTest do
              | :standard | :editor         | "tuesdays only" |
              | :standard | :view_only      | false           |
            """ == [
-             %{plan: :free, user_permission: :admin, can_invite?: true},
-             %{plan: :free, user_permission: :editor, can_invite?: "maybe"},
-             %{plan: :free, user_permission: :view_only, can_invite?: false},
-             %{plan: :standard, user_permission: :admin, can_invite?: true},
-             %{plan: :standard, user_permission: :editor, can_invite?: "tuesdays only"},
-             %{plan: :standard, user_permission: :view_only, can_invite?: false}
+             [plan: :free, user_permission: :admin, can_invite?: true],
+             [plan: :free, user_permission: :editor, can_invite?: "maybe"],
+             [plan: :free, user_permission: :view_only, can_invite?: false],
+             [plan: :standard, user_permission: :admin, can_invite?: true],
+             [plan: :standard, user_permission: :editor, can_invite?: "tuesdays only"],
+             [plan: :standard, user_permission: :view_only, can_invite?: false]
            ]
   end
 
@@ -30,8 +30,8 @@ defmodule ParameterizedTest.SigilTest do
              | :free     | :admin          | true            |
              | :free     | :editor         | "maybe"         |
            """ == [
-             %{plan: :free, user_permission: :admin, can_invite?: true},
-             %{plan: :free, user_permission: :editor, can_invite?: "maybe"}
+             [plan: :free, user_permission: :admin, can_invite?: true],
+             [plan: :free, user_permission: :editor, can_invite?: "maybe"]
            ]
   end
 
@@ -40,7 +40,7 @@ defmodule ParameterizedTest.SigilTest do
              | string               | integer    | keyword_list            |
              | String.upcase("foo") | div(17, 4) | [foo: :bar, baz: :bang] |
            """ == [
-             %{string: "FOO", integer: 4, keyword_list: [foo: :bar, baz: :bang]}
+             [string: "FOO", integer: 4, keyword_list: [foo: :bar, baz: :bang]]
            ]
   end
 
