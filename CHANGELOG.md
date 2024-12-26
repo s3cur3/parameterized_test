@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.1
+
+- [Support `@tag` module attributes applied to `param_test` or `param_feature` blocks](https://github.com/s3cur3/parameterized_test/pull/40)
+
 ## v0.5.0
 
 - New Mix formatter plugin for formatting the package's sigils, courtesy of @rschenk (🎉). To enable it, in your `formatter.exs`, add to following:
