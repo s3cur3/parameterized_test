@@ -345,4 +345,15 @@ defmodule ParameterizedTestTest do
     |> visit(url)
     |> assert_has(Wallaby.Query.text(text, minimum: 1))
   end
+
+  @tag skip: true
+  param_test "applies tags to all parameterized tests",
+             """
+             | text     | url                  |
+             |----------|----------------------|
+             | "GitHub" | "https://github.com" |
+             | "Google" | "https://google.com" |
+             """ do
+    flunk("This test should not run")
+  end
 end

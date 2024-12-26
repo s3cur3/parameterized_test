@@ -101,11 +101,13 @@ defmodule ParameterizedTest do
       end
 
   """
-  defmacro param_test(test_name, examples, context_ast \\ %{}, blocks) do
+  defmacro param_test(test_name, examples, context_ast \\ quote(do: %{}), blocks) do
     context = Macro.Env.location(__ENV__)
     escaped_examples = escape_examples(examples, context)
 
     quote location: :keep do
+      block_tags = Module.get_attribute(__MODULE__, :tag)
+
       for {example, index} <- Enum.with_index(unquote(escaped_examples)) do
         for {key, val} <- example do
           @tag [{key, val}]
@@ -113,6 +115,11 @@ defmodule ParameterizedTest do
 
         unquoted_test_name = unquote(test_name)
         full_test_name = ParameterizedTest.Parser.full_test_name(unquoted_test_name, example, index, 212)
+
+        # "Forward" tags defined on the param_test macro itself
+        for [{key, val} | _] <- block_tags do
+          @tag [{key, val}]
+        end
 
         @tag param_test: true
         test "#{full_test_name}", unquote(context_ast) do
@@ -143,11 +150,13 @@ defmodule ParameterizedTest do
           |> assert_has(Wallaby.Query.text(text, minimum: 1))
         end
     """
-    defmacro param_feature(test_name, examples, context_ast \\ %{}, blocks) do
+    defmacro param_feature(test_name, examples, context_ast \\ quote(do: %{}), blocks) do
       context = Macro.Env.location(__ENV__)
       escaped_examples = escape_examples(examples, context)
 
       quote location: :keep do
+        block_tags = Module.get_attribute(__MODULE__, :tag)
+
         for {example, index} <- Enum.with_index(unquote(escaped_examples)) do
           for {key, val} <- example do
             @tag [{key, val}]
@@ -155,6 +164,11 @@ defmodule ParameterizedTest do
 
           unquoted_test_name = unquote(test_name)
           @full_test_name ParameterizedTest.Parser.full_test_name(unquoted_test_name, example, index, 212)
+
+          # "Forward" tags defined on the param_test macro itself
+          for [{key, val} | _] <- block_tags do
+            @tag [{key, val}]
+          end
 
           @tag param_test: true
           feature "#{@full_test_name}", unquote(context_ast) do
