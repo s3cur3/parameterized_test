@@ -1,8 +1,44 @@
 # Changelog
 
-## v0.5.1
+## v0.6.0
 
-- [Support `@tag` module attributes applied to `param_test` or `param_feature` blocks](https://github.com/s3cur3/parameterized_test/pull/40)
+### New feature, and potentially breaking change: [Add the failing parameter line to the backtrace when a test fails](https://github.com/s3cur3/parameterized_test/pull/41)
+
+This change lets each `param_test`/`param_feature` carry forward the context of which row in your parameters table it's executing. Then, when the test fails, it will add that line of the file to the backtrace printed by ExUnit, along with the text of the row.
+
+For instance, consider this test that will fail 100% of the time:
+
+```elixir
+param_test "gives the failing parameter row when a test fails",
+            """
+            | should_fail? | description |
+            | false        | "Works"     |
+            | true         | "Breaks"    |
+            """,
+            %{should_fail?: should_fail?} do
+  refute should_fail?
+end
+```
+
+When you run this, you'll get an ExUnit backtrace that looks like this:
+
+```
+  1) test gives the failing parameter row when a test fails - Breaks (ParameterizedTest.BacktraceTest)
+     test/parameterized_test/backtrace_test.exs:1
+     Expected truthy, got false
+     code: assert not should_fail?
+     stacktrace:
+       test/parameterized_test/backtrace_test.exs:8: (test)
+       test/parameterized_test/backtrace_test.exs:5: ParameterizedTest.BacktraceTest."| true         | \"Breaks\"    |"/0
+```
+
+This should make it easier to figure out which of your parameter rows caused the failing test.
+
+This is a breaking change if and only if you were using the included sigil (`~PARAMS` for Elixir v1.15+, or `~x` for Elixir v1.14).
+
+### Important bug fix: [Support `@tag` module attributes applied to `param_test` or `param_feature` blocks](https://github.com/s3cur3/parameterized_test/pull/40)
+
+This bug has been there from the beginning, and was making it so that `@tag`s you thought were applying to all the parameterized tests in a block were in fact only applying to the first set of parameters.
 
 ## v0.5.0
 

@@ -46,9 +46,9 @@ defmodule ParameterizedTest.BacktraceTest do
     @tag failure_with_backtrace: true
     param_test "points to line 51 when a test fails",
                """
-               | should_fail? |
-               | false        |
-               | true         |
+               | should_fail? | description |
+               | false        | "Works"     |
+               | true         | "Breaks"    |
                """,
                %{should_fail?: should_fail?} do
       assert not should_fail?

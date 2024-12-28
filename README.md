@@ -241,8 +241,39 @@ parameterized tests, and property tests for a given piece of functionality.
     ```
 
 
+## Debugging failing tests 
 
-## About test names, and improving debuggability
+As of v0.6.0, when you get a test failure, the backtrace that ExUnit prints will include
+the line in your file that provided the failing parameters. For instance, consider
+this test that will fail 100% of the time:
+
+```elixir
+param_test "gives the failing parameter row when a test fails",
+            """
+            | should_fail? | description |
+            | false        | "Works"     |
+            | true         | "Breaks"    |
+            """,
+            %{should_fail?: should_fail?} do
+  refute should_fail?
+end
+```
+
+When you run it, you'll get an ExUnit backtrace that looks like this:
+
+```
+  1) test gives the failing parameter row when a test fails - Breaks (ParameterizedTest.BacktraceTest)
+     test/parameterized_test/backtrace_test.exs:1
+     Expected truthy, got false
+     code: assert not should_fail?
+     stacktrace:
+       test/parameterized_test/backtrace_test.exs:8: (test)
+       test/parameterized_test/backtrace_test.exs:5: ParameterizedTest.BacktraceTest."| true         | \"Breaks\"    |"/0
+```
+
+Use this line number to figure out which of your parameter rows caused the failing test.
+
+### About test names, and improving debuggability
 
 ExUnit requires each test in a module to have a unique name. By default,
 without a `description` for the rows in your parameters table, 
