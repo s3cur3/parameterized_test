@@ -269,10 +269,14 @@ defmodule ParameterizedTestTest do
     end
   end
 
-  @module_examples ParameterizedTest.Parser.parse_examples("""
-                   | int_1 | int_2 |
-                   | 99    | 100   |
-                   """)
+  @module_examples ParameterizedTest.Parser.parse_examples(
+                     """
+                     | int_1 | int_2 |
+                     | 99    | 100   |
+                     """,
+                     file: __ENV__.file,
+                     line: __ENV__.line
+                   )
 
   param_test "accepts pre-parsed values from ~x sigil",
              @module_examples,

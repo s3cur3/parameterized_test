@@ -54,7 +54,9 @@ defmodule ParameterizedTest.Sigil do
   """
   @spec sigil_x(String.t(), Keyword.t()) :: [map()]
   # credo:disable-for-next-line Credo.Check.Readability.FunctionNames
-  def sigil_x(table, _opts \\ []) do
-    ParameterizedTest.Parser.parse_examples(table)
+  defmacro sigil_x(table, _opts \\ []) do
+    quote do
+      ParameterizedTest.Parser.parse_examples(unquote(table), file: __ENV__.file, line: __ENV__.line)
+    end
   end
 end
