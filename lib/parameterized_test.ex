@@ -75,6 +75,8 @@ defmodule ParameterizedTest do
 
   See the README for more information.
   """
+  alias ParameterizedTest.Parser
+
   require ParameterizedTest.Backtrace
 
   @doc """
@@ -104,7 +106,7 @@ defmodule ParameterizedTest do
   defmacro param_test(test_name, examples, context_ast \\ quote(do: %{}), blocks) do
     quote location: :keep do
       context = Macro.Env.location(__ENV__)
-      escaped_examples = ParameterizedTest.Macros.escape_examples(unquote(examples), context)
+      escaped_examples = Parser.escape_examples(unquote(examples), context)
 
       block_tags = Module.get_attribute(__MODULE__, :tag)
 
@@ -114,7 +116,7 @@ defmodule ParameterizedTest do
         end
 
         unquoted_test_name = unquote(test_name)
-        full_test_name = ParameterizedTest.Parser.full_test_name(unquoted_test_name, example, index, 212)
+        full_test_name = Parser.full_test_name(unquoted_test_name, example, index, 212)
 
         # "Forward" tags defined on the param_test macro itself
         for [{key, val} | _] <- block_tags do
@@ -159,8 +161,10 @@ defmodule ParameterizedTest do
     """
     defmacro param_feature(test_name, examples, context_ast \\ quote(do: %{}), blocks) do
       quote location: :keep do
+        use Wallaby.Feature
+
         context = Macro.Env.location(__ENV__)
-        escaped_examples = ParameterizedTest.Macros.escape_examples(unquote(examples), context)
+        escaped_examples = Parser.escape_examples(unquote(examples), context)
 
         block_tags = Module.get_attribute(__MODULE__, :tag)
 
@@ -170,7 +174,7 @@ defmodule ParameterizedTest do
           end
 
           unquoted_test_name = unquote(test_name)
-          @full_test_name ParameterizedTest.Parser.full_test_name(unquoted_test_name, example, index, 212)
+          @full_test_name Parser.full_test_name(unquoted_test_name, example, index, 212)
 
           # "Forward" tags defined on the param_test macro itself
           for [{key, val} | _] <- block_tags do

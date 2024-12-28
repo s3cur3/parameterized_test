@@ -5,6 +5,31 @@ defmodule ParameterizedTest.Parser do
 
   defguardp is_valid_context(context) when is_list(context) and context != []
 
+  @spec escape_examples(String.t() | list, Parser.context()) :: Parser.parsed_examples() | keyword()
+  def escape_examples(examples, context) do
+    case examples do
+      str when is_binary(str) ->
+        file_extension =
+          str
+          |> Path.extname()
+          |> String.downcase()
+
+        case file_extension do
+          ext when ext in [".md", ".markdown", ".csv"] ->
+            parse_file_path_examples(str, context)
+
+          _ ->
+            parse_examples(str, context)
+        end
+
+      list when is_list(list) ->
+        parse_examples(list, context)
+
+      already_escaped when is_tuple(already_escaped) ->
+        already_escaped
+    end
+  end
+
   @spec parse_examples(String.t() | list, context()) :: [{keyword(), context()}]
   def parse_examples(table, context \\ [])
 

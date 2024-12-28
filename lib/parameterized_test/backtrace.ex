@@ -6,7 +6,9 @@ defmodule ParameterizedTest.Backtrace do
   def add_test_context(%ExUnit.AssertionError{} = e, bt, context) do
     test_idx =
       Enum.find_index(bt, fn {_m, f, _arity, _context} ->
-        f |> to_string() |> String.starts_with?("test ")
+        f
+        |> to_string()
+        |> String.starts_with?(["test ", "feature "])
       end)
 
     {before_test, [test_line | after_test]} = Enum.split(bt, test_idx)
@@ -31,6 +33,10 @@ defmodule ParameterizedTest.Backtrace do
             table_data
           end
 
+        # We're deliberately creating the atoms here.
+        # There's no unbounded atom creation because presumably there are a limited
+        # number of test failures you'll hit in one run of the test suite.
+        # credo:disable-for-next-line Credo.Check.Warning.UnsafeToAtom
         String.to_atom(truncated_name)
 
       _ ->
