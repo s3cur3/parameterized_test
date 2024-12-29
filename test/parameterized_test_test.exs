@@ -1,6 +1,5 @@
 defmodule ParameterizedTestTest do
   use ExUnit.Case, async: true
-  use Wallaby.Feature
 
   import ParameterizedTest
 
@@ -337,6 +336,23 @@ defmodule ParameterizedTestTest do
     end
   end
 
+  @tag skip: true
+  param_test "applies tags to all parameterized tests",
+             """
+             | text     | url                  |
+             |----------|----------------------|
+             | "GitHub" | "https://github.com" |
+             | "Google" | "https://google.com" |
+             """ do
+    flunk("This test should not run")
+  end
+end
+
+defmodule ParameterizedTestTest.WallabyTest do
+  use ExUnit.Case, async: true
+
+  import ParameterizedTest
+
   param_feature "supports Wallaby tests",
                 """
                 | text     | url                  |
@@ -348,16 +364,5 @@ defmodule ParameterizedTestTest do
     session
     |> visit(url)
     |> assert_has(Wallaby.Query.text(text, minimum: 1))
-  end
-
-  @tag skip: true
-  param_test "applies tags to all parameterized tests",
-             """
-             | text     | url                  |
-             |----------|----------------------|
-             | "GitHub" | "https://github.com" |
-             | "Google" | "https://google.com" |
-             """ do
-    flunk("This test should not run")
   end
 end

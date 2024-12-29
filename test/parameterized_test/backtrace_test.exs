@@ -142,4 +142,11 @@ defmodule ParameterizedTest.BacktraceTest do
   } do
     assert gets_free_shipping?
   end
+
+  @tag failure_with_backtrace: true
+  param_test "attributes TSV error to test/fixtures/params.tsv line 3", "test/fixtures/params.tsv", %{
+    gets_free_shipping?: gets_free_shipping?
+  } do
+    assert not gets_free_shipping?
+  end
 end

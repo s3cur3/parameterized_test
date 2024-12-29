@@ -105,7 +105,11 @@ defmodule ParameterizedTest do
   """
   defmacro param_test(test_name, examples, context_ast \\ quote(do: %{}), blocks) do
     quote location: :keep do
-      context = Macro.Env.location(__ENV__)
+      context =
+        __ENV__
+        |> Macro.Env.location()
+        |> Keyword.put(:macro, :param_test)
+
       escaped_examples = Parser.escape_examples(unquote(examples), context)
 
       block_tags = Module.get_attribute(__MODULE__, :tag)
@@ -163,7 +167,11 @@ defmodule ParameterizedTest do
       quote location: :keep do
         use Wallaby.Feature
 
-        context = Macro.Env.location(__ENV__)
+        context =
+          __ENV__
+          |> Macro.Env.location()
+          |> Keyword.put(:macro, :param_feature)
+
         escaped_examples = Parser.escape_examples(unquote(examples), context)
 
         block_tags = Module.get_attribute(__MODULE__, :tag)

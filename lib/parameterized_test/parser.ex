@@ -1,5 +1,7 @@
 defmodule ParameterizedTest.Parser do
   @moduledoc false
+  require Logger
+
   @type context :: [{:line, integer} | {:file, String.t()}, ...]
   @type parsed_examples :: [{keyword(), context()}]
 
@@ -15,11 +17,20 @@ defmodule ParameterizedTest.Parser do
           |> String.downcase()
 
         case file_extension do
-          ext when ext in [".md", ".markdown", ".csv"] ->
+          ext when ext in [".md", ".markdown", ".csv", ".tsv"] ->
             parse_file_path_examples(str, context)
 
           _ ->
-            parse_examples(str, context)
+            str
+            |> parse_examples(context)
+            |> tap(fn
+              [] ->
+                file_path = Path.relative_to(context[:file] || "", File.cwd!())
+                Logger.warning("No parameters found in #{context[:macro] || "test"} at #{file_path}:#{context[:line]}")
+
+              _ ->
+                :ok
+            end)
         end
 
       already_escaped when is_list(already_escaped) ->
@@ -142,9 +153,9 @@ defmodule ParameterizedTest.Parser do
 
   defp parse_tsv_file(file, context) when is_valid_context(context) do
     file
-    |> ParameterizedTest.TsvParser.parse_string()
-    |> Enum.map(&String.trim/1)
+    |> ParameterizedTest.TsvParser.parse_string(skip_headers: false)
     |> parse_csv_rows(context)
+    |> IO.inspect(label: "tsv", pretty: true, limit: :infinity)
   end
 
   @spec parse_md_rows([String.t()], context()) :: parsed_examples()
