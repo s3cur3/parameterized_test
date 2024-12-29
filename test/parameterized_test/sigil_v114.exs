@@ -53,7 +53,7 @@ defmodule ParameterizedTest.SigilTest do
 
     contexts = Enum.map(parsed, &elem(&1, 1))
     [first_context | _] = contexts
-    assert first_context[:min_line] == params_header_line
+    assert first_context[:min_line] == params_header_line + 2
 
     assert Enum.map(contexts, & &1[:min_line]) ==
              Enum.to_list(first_context[:min_line]..(first_context[:min_line] + length(parsed) - 1))
