@@ -89,6 +89,10 @@ defmodule ParameterizedTestTest do
       assert free_shipping? == gets_free_shipping?
     end
 
+    param_test "does not run empty markdown files", "test/fixtures/empty.md", %{} do
+      flunk("should not run")
+    end
+
     param_test "supports CSV files as input",
                "test/fixtures/params.csv",
                %{
