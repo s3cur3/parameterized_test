@@ -75,8 +75,9 @@ defmodule ParameterizedTest.Backtrace do
       {raw, min_line} when is_binary(raw) and raw != "" and is_integer(min_line) ->
         offset_from_min =
           path
-          |> File.stream!(:line)
-          |> Stream.drop(min_line - 1)
+          |> File.read!()
+          |> String.split(["\n", "\r\n"])
+          |> Enum.drop(min_line - 1)
           |> Enum.find_index(&String.contains?(&1, raw))
 
         if is_nil(offset_from_min) do

@@ -5,6 +5,8 @@ defmodule ParameterizedTest.SigilTest do
   import ParameterizedTest.Sigil, only: :sigils
 
   test "basic examples" do
+    params_header_line = __ENV__.line + 3
+
     parsed = ~PARAMS"""
       | plan      | user_permission | can_invite?     |
       | :free     | :admin          | true            |
@@ -26,7 +28,7 @@ defmodule ParameterizedTest.SigilTest do
 
     contexts = Enum.map(parsed, &elem(&1, 1))
     [first_context | _] = contexts
-    assert first_context[:min_line] == 9
+    assert first_context[:min_line] == params_header_line
 
     assert Enum.map(contexts, & &1[:min_line]) ==
              Enum.to_list(first_context[:min_line]..(first_context[:min_line] + length(parsed) - 1))

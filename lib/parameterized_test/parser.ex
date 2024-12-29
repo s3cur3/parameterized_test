@@ -155,7 +155,6 @@ defmodule ParameterizedTest.Parser do
     file
     |> ParameterizedTest.TsvParser.parse_string(skip_headers: false)
     |> parse_csv_rows(context)
-    |> IO.inspect(label: "tsv", pretty: true, limit: :infinity)
   end
 
   @spec parse_md_rows([String.t()], context()) :: parsed_examples()
