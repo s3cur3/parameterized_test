@@ -4,6 +4,10 @@ defmodule ParameterizedTest.Backtrace do
 
   @spec add_test_context(ExUnit.AssertionError.t(), [tuple()], Parser.context()) :: no_return()
   def add_test_context(%ExUnit.AssertionError{} = e, bt, context) do
+    reraise e, augment_backtrace(bt, context)
+  end
+
+  defp augment_backtrace(bt, context) do
     test_idx =
       Enum.find_index(bt, fn {_m, f, _arity, _context} ->
         f
@@ -20,7 +24,9 @@ defmodule ParameterizedTest.Backtrace do
     file_path = Path.relative_to(context[:file], File.cwd!())
     parameter_line = find_parameter_line(file_path, context)
     parameter_stack_frame = {m, attributed_fun, 0, [file: file_path, line: parameter_line]}
-    reraise e, before_test ++ [test_line, parameter_stack_frame | after_test]
+    before_test ++ [test_line, parameter_stack_frame | after_test]
+  catch
+    _, _ -> bt
   end
 
   defp function_to_attribute(test_fun, context) do

@@ -42,21 +42,19 @@ defmodule ParameterizedTest.BacktraceTest do
     end
   end
 
-  describe "a describe block" do
-    @tag failure_with_backtrace: true
-    param_test "points to line 51 when a test fails",
-               """
-               | should_fail? | description |
-               | false        | "Works"     |
-               | true         | "Breaks"    |
-               """,
-               %{should_fail?: should_fail?} do
-      assert not should_fail?
-    end
+  @tag failure_with_backtrace: true
+  param_test "points to line #{__ENV__.line + 4} when a test fails",
+             """
+             | should_fail? | description |
+             | false        | "Works"     |
+             | true         | "Breaks"    |
+             """,
+             %{should_fail?: should_fail?} do
+    assert not should_fail?
   end
 
   @tag failure_with_backtrace: true
-  param_test "with added comments, should point to line 66",
+  param_test "with added comments, should point to line #{__ENV__.line + 7}",
              # This is a comment to break the normal (inferrable) line number
              # Another line to screw it up!
              """
@@ -71,7 +69,7 @@ defmodule ParameterizedTest.BacktraceTest do
   end
 
   @tag failure_with_backtrace: true
-  param_test "with a description, should point to line 78",
+  param_test "with a description, should point to line #{__ENV__.line + 4}",
              # This is a comment to break the normal (inferrable) line number
              """
              | variable_1 | variable_2 | description |
@@ -84,7 +82,7 @@ defmodule ParameterizedTest.BacktraceTest do
 
   @tag failure_with_backtrace: true
   param_test(
-    "with parens, should point to line 90",
+    "with parens, should point to line #{__ENV__.line + 3}",
     """
     | variable_1 | variable_2 |
     | "foo"      | "bar"      |
@@ -97,7 +95,7 @@ defmodule ParameterizedTest.BacktraceTest do
 
   @tag failure_with_backtrace: true
   param_feature(
-    "feature with parens should point to line 104",
+    "feature with parens should point to line #{__ENV__.line + 4}",
     """
     | variable_1 | variable_2 |
 
@@ -105,6 +103,24 @@ defmodule ParameterizedTest.BacktraceTest do
     """,
     %{variable_1: variable_1, variable_2: variable_2}
   ) do
+    assert variable_1 == "foo"
+    assert variable_2 != "bar"
+  end
+
+  @tag failure_with_backtrace: true
+  param_test "hand-rolled params shouldn't give attribution", [[variable_1: "foo", variable_2: "bar"]], %{
+    variable_1: variable_1,
+    variable_2: variable_2
+  } do
+    assert variable_1 == "foo"
+    assert variable_2 != "bar"
+  end
+
+  @tag failure_with_backtrace: true
+  param_feature "hand-rolled params shouldn't give attribution", [[variable_1: "foo", variable_2: "bar"]], %{
+    variable_1: variable_1,
+    variable_2: variable_2
+  } do
     assert variable_1 == "foo"
     assert variable_2 != "bar"
   end
