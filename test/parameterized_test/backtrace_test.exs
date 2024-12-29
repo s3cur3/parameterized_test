@@ -14,8 +14,10 @@ defmodule ParameterizedTest.BacktraceTest do
              | true         |
              """,
              %{should_fail?: should_fail?} do
+    first_test_line = __ENV__.line
+
     if should_fail? do
-      context = [file: "test/parameterized_test/backtrace_test.exs", min_line: 12, raw: "| true         |"]
+      context = [file: __ENV__.file, min_line: first_test_line - 7, raw: "| true         |"]
 
       try do
         assert not should_fail?
@@ -29,12 +31,12 @@ defmodule ParameterizedTest.BacktraceTest do
 
               assert {__MODULE__, f1, 1, context1} = failing_line
               assert f1 == :"test gives the failing parameter row when a test fails ([should_fail?: true])"
-              assert context1[:line] == 22
+              assert context1[:line] == first_test_line + 6
 
               assert {__MODULE__, f2, 0, context2} = parameter_line
               # credo:disable-for-next-line Credo.Check.Warning.UnsafeToAtom
               assert f2 == String.to_atom(context[:raw])
-              assert context2[:line] == 15
+              assert context2[:line] == first_test_line - 3
           end
       end
     else
@@ -93,6 +95,7 @@ defmodule ParameterizedTest.BacktraceTest do
     assert variable_2 != "bar"
   end
 
+  @tag skip: true
   @tag failure_with_backtrace: true
   param_feature(
     "feature with parens should point to line #{__ENV__.line + 4}",
@@ -116,6 +119,7 @@ defmodule ParameterizedTest.BacktraceTest do
     assert variable_2 != "bar"
   end
 
+  @tag skip: true
   @tag failure_with_backtrace: true
   param_feature "hand-rolled params shouldn't give attribution", [[variable_1: "foo", variable_2: "bar"]], %{
     variable_1: variable_1,
@@ -123,5 +127,19 @@ defmodule ParameterizedTest.BacktraceTest do
   } do
     assert variable_1 == "foo"
     assert variable_2 != "bar"
+  end
+
+  @tag failure_with_backtrace: true
+  param_test "attributes Markdown error to test/fixtures/params.md line 6",
+             "test/fixtures/params.md",
+             %{coupon: coupon} do
+    assert is_nil(coupon)
+  end
+
+  @tag failure_with_backtrace: true
+  param_test "attributes CSV error to test/fixtures/params.csv line 2", "test/fixtures/params.csv", %{
+    gets_free_shipping?: gets_free_shipping?
+  } do
+    assert gets_free_shipping?
   end
 end

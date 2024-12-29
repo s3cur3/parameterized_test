@@ -5,7 +5,7 @@ defmodule ParameterizedTest.Parser do
 
   defguardp is_valid_context(context) when is_list(context) and context != []
 
-  @spec escape_examples(String.t() | list, Parser.context()) :: Parser.parsed_examples() | keyword()
+  @spec escape_examples(String.t() | list, context()) :: parsed_examples() | keyword()
   def escape_examples(examples, context) do
     case examples do
       str when is_binary(str) ->
@@ -30,8 +30,8 @@ defmodule ParameterizedTest.Parser do
     end
   end
 
-  @spec parse_examples(String.t() | list, context()) :: [{keyword(), context()}]
-  def parse_examples(table, context \\ [])
+  @spec parse_examples(String.t() | list, context()) :: parsed_examples()
+  def parse_examples(table, context)
 
   def parse_examples(table, context) when is_binary(table) and is_valid_context(context) do
     table
@@ -50,7 +50,7 @@ defmodule ParameterizedTest.Parser do
     parse_hand_rolled_table(table, context)
   end
 
-  @spec parse_file_path_examples(String.t(), context()) :: [map()]
+  @spec parse_file_path_examples(String.t(), context()) :: parsed_examples()
   def parse_file_path_examples(path, context) when is_valid_context(context) do
     file = File.read!(path)
 
@@ -112,6 +112,7 @@ defmodule ParameterizedTest.Parser do
   defp description(%{Description: desc}), do: desc
   defp description(_), do: nil
 
+  @spec parse_hand_rolled_table(list(), context()) :: parsed_examples()
   defp parse_hand_rolled_table(evaled_table, context) when is_valid_context(context) do
     parsed_table =
       Enum.map(evaled_table, fn
@@ -149,6 +150,7 @@ defmodule ParameterizedTest.Parser do
     |> parse_csv_rows(context)
   end
 
+  @spec parse_md_rows([String.t()], context()) :: parsed_examples()
   defp parse_md_rows(rows, context)
   defp parse_md_rows([], _context), do: []
 
@@ -164,7 +166,7 @@ defmodule ParameterizedTest.Parser do
     # we'll use this as the place to start looking for the parameters line in the full
     # file contents (by reading the file and using the :raw context to find the text).
     |> Enum.with_index(context[:line] + 1)
-    |> Enum.reject(fn {row, _index} -> row == "" or separator_or_comment_row?(row) end)
+    |> Enum.reject(fn {row, _index} -> separator_or_comment_row?(row) end)
     |> Enum.map(fn {row, index} ->
       context =
         context
@@ -190,14 +192,18 @@ defmodule ParameterizedTest.Parser do
     headers = Enum.map(header, &String.to_atom/1)
 
     rows
-    |> Enum.map(fn row ->
+    # Account for the header line
+    |> Enum.with_index(context[:line] + 1)
+    |> Enum.reject(fn {row, _index} -> separator_or_comment_row?(row) end)
+    |> Enum.map(fn {row, index} ->
+      context = Keyword.put(context, :line, index)
       cells = Enum.map(row, &eval_cell(&1, row, context))
 
       check_cell_count!(cells, headers, row, context)
 
-      Enum.zip(headers, cells)
+      {Enum.zip(headers, cells), context}
     end)
-    |> Enum.reject(&Enum.empty?/1)
+    |> Enum.reject(fn {row, _context} -> Enum.empty?(row) end)
   end
 
   defp eval_cell(cell, row, _context) do
@@ -267,7 +273,11 @@ defmodule ParameterizedTest.Parser do
     |> Enum.map(&String.trim/1)
   end
 
-  defp separator_or_comment_row?(row), do: separator_row?(row) or comment_row?(row)
+  defp separator_or_comment_row?([]), do: true
+  defp separator_or_comment_row?([cell]) when is_binary(cell), do: separator_or_comment_row?(cell)
+  defp separator_or_comment_row?([_ | _]), do: false
+  defp separator_or_comment_row?(""), do: true
+  defp separator_or_comment_row?(row) when is_binary(row), do: separator_row?(row) or comment_row?(row)
 
   defp comment_row?(row), do: String.starts_with?(row, "#")
 

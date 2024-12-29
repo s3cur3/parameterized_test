@@ -29,7 +29,7 @@ defmodule ParameterizedTest.MixProject do
       ],
       dialyzer: [
         ignore_warnings: ".dialyzer_ignore.exs",
-        plt_add_apps: [:mix],
+        plt_add_apps: [:mix, :ex_unit],
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
         flags: [
           :error_handling,

@@ -65,7 +65,6 @@ defmodule ParameterizedTest.Sigil do
         assert rem(odd, 2) == 1
       end
   """
-  @spec sigil_PARAMS(String.t(), Keyword.t()) :: ParameterizedTest.Parser.parsed_examples()
   # credo:disable-for-next-line Credo.Check.Readability.FunctionNames
   defmacro sigil_PARAMS(table, _opts \\ []) do
     quote do

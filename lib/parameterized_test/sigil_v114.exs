@@ -52,7 +52,6 @@ defmodule ParameterizedTest.Sigil do
         {%{plan: :free, user_permission: :editor, can_invite?: "maybe"}, _context}
       ]
   """
-  @spec sigil_x(String.t(), Keyword.t()) :: ParameterizedTest.Parser.parsed_examples()
   # credo:disable-for-next-line Credo.Check.Readability.FunctionNames
   defmacro sigil_x(table, _opts \\ []) do
     quote do
