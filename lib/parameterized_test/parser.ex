@@ -22,11 +22,8 @@ defmodule ParameterizedTest.Parser do
             parse_examples(str, context)
         end
 
-      list when is_list(list) ->
-        parse_examples(list, context)
-
-      already_escaped when is_tuple(already_escaped) ->
-        already_escaped
+      already_escaped when is_list(already_escaped) ->
+        parse_examples(already_escaped, context)
     end
   end
 
