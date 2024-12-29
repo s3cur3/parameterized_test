@@ -21,9 +21,14 @@ defmodule ParameterizedTest.Backtrace do
 
     {m, test_fun, _arity, _context} = test_line
 
+    IO.inspect(test_line, label: "test_line", pretty: true, limit: :infinity)
     attributed_fun = function_to_attribute(test_fun, context)
 
     file_path = Path.relative_to(context[:file], File.cwd!())
+    IO.inspect(context[:file], label: "context[:file]", pretty: true, limit: :infinity)
+    IO.inspect(File.cwd!(), label: "File.cwd!()", pretty: true, limit: :infinity)
+    IO.inspect(file_path, label: "file_path", pretty: true, limit: :infinity)
+    IO.inspect(File.exists?(context[:file]), label: "File.exists?(context[:file])", pretty: true, limit: :infinity)
     parameter_line = find_parameter_line(file_path, context)
     parameter_stack_frame = {m, attributed_fun, 0, [file: file_path, line: parameter_line]}
     before_test ++ [test_line, parameter_stack_frame | after_test]
@@ -63,6 +68,8 @@ defmodule ParameterizedTest.Backtrace do
   # the macro context.
   defp find_parameter_line(path, context) do
     default = context[:min_line] || context[:line] || 0
+
+    IO.inspect(File.exists?(path), label: "File.exists?(path)", pretty: true, limit: :infinity)
 
     case {context[:raw], context[:min_line]} do
       {raw, min_line} when is_binary(raw) and raw != "" and is_integer(min_line) ->
