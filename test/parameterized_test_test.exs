@@ -102,6 +102,10 @@ defmodule ParameterizedTestTest do
       assert (coupon == "FREE_SHIP" and gets_free_shipping?) or (is_nil(coupon) and not gets_free_shipping?)
     end
 
+    param_test "does not run empty CSV files", "test/fixtures/empty.csv", %{} do
+      flunk("should not run")
+    end
+
     param_test "supports TSV files as input",
                "test/fixtures/params.tsv",
                %{
