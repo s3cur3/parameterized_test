@@ -6,7 +6,7 @@ defmodule ParameterizedTest.MixProject do
   def project do
     [
       app: :parameterized_test,
-      version: "0.5.0",
+      version: "0.6.0",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -29,7 +29,7 @@ defmodule ParameterizedTest.MixProject do
       ],
       dialyzer: [
         ignore_warnings: ".dialyzer_ignore.exs",
-        plt_add_apps: [:mix],
+        plt_add_apps: [:mix, :ex_unit],
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
         flags: [
           :error_handling,

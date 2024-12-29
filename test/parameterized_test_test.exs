@@ -1,6 +1,5 @@
 defmodule ParameterizedTestTest do
   use ExUnit.Case, async: true
-  use Wallaby.Feature
 
   import ParameterizedTest
 
@@ -90,6 +89,10 @@ defmodule ParameterizedTestTest do
       assert free_shipping? == gets_free_shipping?
     end
 
+    param_test "does not run empty markdown files", "test/fixtures/empty.md", %{} do
+      flunk("should not run")
+    end
+
     param_test "supports CSV files as input",
                "test/fixtures/params.csv",
                %{
@@ -97,6 +100,10 @@ defmodule ParameterizedTestTest do
                  gets_free_shipping?: gets_free_shipping?
                } do
       assert (coupon == "FREE_SHIP" and gets_free_shipping?) or (is_nil(coupon) and not gets_free_shipping?)
+    end
+
+    param_test "does not run empty CSV files", "test/fixtures/empty.csv", %{} do
+      flunk("should not run")
     end
 
     param_test "supports TSV files as input",
@@ -269,10 +276,14 @@ defmodule ParameterizedTestTest do
     end
   end
 
-  @module_examples ParameterizedTest.Parser.parse_examples("""
-                   | int_1 | int_2 |
-                   | 99    | 100   |
-                   """)
+  @module_examples ParameterizedTest.Parser.parse_examples(
+                     """
+                     | int_1 | int_2 |
+                     | 99    | 100   |
+                     """,
+                     file: __ENV__.file,
+                     line: __ENV__.line
+                   )
 
   param_test "accepts pre-parsed values from ~x sigil",
              @module_examples,
@@ -333,6 +344,23 @@ defmodule ParameterizedTestTest do
     end
   end
 
+  @tag skip: true
+  param_test "applies tags to all parameterized tests",
+             """
+             | text     | url                  |
+             |----------|----------------------|
+             | "GitHub" | "https://github.com" |
+             | "Google" | "https://google.com" |
+             """ do
+    flunk("This test should not run")
+  end
+end
+
+defmodule ParameterizedTestTest.WallabyTest do
+  use ExUnit.Case, async: true
+
+  import ParameterizedTest
+
   param_feature "supports Wallaby tests",
                 """
                 | text     | url                  |
@@ -344,16 +372,5 @@ defmodule ParameterizedTestTest do
     session
     |> visit(url)
     |> assert_has(Wallaby.Query.text(text, minimum: 1))
-  end
-
-  @tag skip: true
-  param_test "applies tags to all parameterized tests",
-             """
-             | text     | url                  |
-             |----------|----------------------|
-             | "GitHub" | "https://github.com" |
-             | "Google" | "https://google.com" |
-             """ do
-    flunk("This test should not run")
   end
 end

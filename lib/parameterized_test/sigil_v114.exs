@@ -31,12 +31,12 @@ defmodule ParameterizedTest.Sigil do
       ...>   | :standard | :view_only      | false           |
       ...> \"""
       [
-        %{plan: :free, user_permission: :admin, can_invite?: true},
-        %{plan: :free, user_permission: :editor, can_invite?: "maybe"},
-        %{plan: :free, user_permission: :view_only, can_invite?: false},
-        %{plan: :standard, user_permission: :admin, can_invite?: true},
-        %{plan: :standard, user_permission: :editor, can_invite?: "tuesdays only"},
-        %{plan: :standard, user_permission: :view_only, can_invite?: false}
+        {%{plan: :free, user_permission: :admin, can_invite?: true}, _context},
+        {%{plan: :free, user_permission: :editor, can_invite?: "maybe"}, _context},
+        {%{plan: :free, user_permission: :view_only, can_invite?: false}, _context},
+        {%{plan: :standard, user_permission: :admin, can_invite?: true}, _context},
+        {%{plan: :standard, user_permission: :editor, can_invite?: "tuesdays only"}, _context},
+        {%{plan: :standard, user_permission: :view_only, can_invite?: false}, _context}
       ]
 
   You can optionally include separators between the headers and the data.
@@ -48,13 +48,14 @@ defmodule ParameterizedTest.Sigil do
       ...>   | :free     | :editor         | "maybe"         |
       ...> \"""
       [
-        %{plan: :free, user_permission: :admin, can_invite?: true},
-        %{plan: :free, user_permission: :editor, can_invite?: "maybe"}
+        {%{plan: :free, user_permission: :admin, can_invite?: true}, _context},
+        {%{plan: :free, user_permission: :editor, can_invite?: "maybe"}, _context}
       ]
   """
-  @spec sigil_x(String.t(), Keyword.t()) :: [map()]
   # credo:disable-for-next-line Credo.Check.Readability.FunctionNames
-  def sigil_x(table, _opts \\ []) do
-    ParameterizedTest.Parser.parse_examples(table)
+  defmacro sigil_x(table, _opts \\ []) do
+    quote do
+      ParameterizedTest.Parser.parse_examples(unquote(table), file: __ENV__.file, line: __ENV__.line)
+    end
   end
 end

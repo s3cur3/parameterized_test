@@ -77,6 +77,8 @@ defmodule ParameterizedTest do
   """
   alias ParameterizedTest.Parser
 
+  require ParameterizedTest.Backtrace
+
   @doc """
   Defines tests that use your parameters or example data.
 
@@ -102,28 +104,39 @@ defmodule ParameterizedTest do
 
   """
   defmacro param_test(test_name, examples, context_ast \\ quote(do: %{}), blocks) do
-    context = Macro.Env.location(__ENV__)
-    escaped_examples = escape_examples(examples, context)
-
     quote location: :keep do
+      context =
+        __ENV__
+        |> Macro.Env.location()
+        |> Keyword.put(:macro, :param_test)
+
+      escaped_examples = Parser.escape_examples(unquote(examples), context)
+
       block_tags = Module.get_attribute(__MODULE__, :tag)
 
-      for {example, index} <- Enum.with_index(unquote(escaped_examples)) do
+      for {{example, context}, index} <- Enum.with_index(escaped_examples) do
         for {key, val} <- example do
           @tag [{key, val}]
         end
 
         unquoted_test_name = unquote(test_name)
-        full_test_name = ParameterizedTest.Parser.full_test_name(unquoted_test_name, example, index, 212)
+        full_test_name = Parser.full_test_name(unquoted_test_name, example, index, 212)
 
         # "Forward" tags defined on the param_test macro itself
         for [{key, val} | _] <- block_tags do
           @tag [{key, val}]
         end
 
+        @param_test_context context
+
         @tag param_test: true
         test "#{full_test_name}", unquote(context_ast) do
-          unquote(blocks)
+          try do
+            unquote(blocks)
+          rescue
+            e in ExUnit.AssertionError ->
+              ParameterizedTest.Backtrace.add_test_context(e, __STACKTRACE__, @param_test_context)
+          end
         end
       end
     end
@@ -151,61 +164,44 @@ defmodule ParameterizedTest do
         end
     """
     defmacro param_feature(test_name, examples, context_ast \\ quote(do: %{}), blocks) do
-      context = Macro.Env.location(__ENV__)
-      escaped_examples = escape_examples(examples, context)
-
       quote location: :keep do
+        use Wallaby.Feature
+
+        context =
+          __ENV__
+          |> Macro.Env.location()
+          |> Keyword.put(:macro, :param_feature)
+
+        escaped_examples = Parser.escape_examples(unquote(examples), context)
+
         block_tags = Module.get_attribute(__MODULE__, :tag)
 
-        for {example, index} <- Enum.with_index(unquote(escaped_examples)) do
+        for {{example, context}, index} <- Enum.with_index(escaped_examples) do
           for {key, val} <- example do
             @tag [{key, val}]
           end
 
           unquoted_test_name = unquote(test_name)
-          @full_test_name ParameterizedTest.Parser.full_test_name(unquoted_test_name, example, index, 212)
+          @full_test_name Parser.full_test_name(unquoted_test_name, example, index, 212)
 
           # "Forward" tags defined on the param_test macro itself
           for [{key, val} | _] <- block_tags do
             @tag [{key, val}]
           end
 
+          @param_test_context context
+
           @tag param_test: true
           feature "#{@full_test_name}", unquote(context_ast) do
-            unquote(blocks)
+            try do
+              unquote(blocks)
+            rescue
+              e in ExUnit.AssertionError ->
+                ParameterizedTest.Backtrace.add_test_context(e, __STACKTRACE__, @param_test_context)
+            end
           end
         end
       end
-    end
-  end
-
-  defp escape_examples(examples, context) do
-    case examples do
-      str when is_binary(str) ->
-        file_extension =
-          str
-          |> Path.extname()
-          |> String.downcase()
-
-        case file_extension do
-          ext when ext in [".md", ".markdown", ".csv"] ->
-            str
-            |> Parser.parse_file_path_examples(context)
-            |> Macro.escape()
-
-          _ ->
-            str
-            |> Parser.parse_examples(context)
-            |> Macro.escape()
-        end
-
-      list when is_list(list) ->
-        list
-        |> Parser.parse_examples(context)
-        |> Macro.escape()
-
-      already_escaped when is_tuple(already_escaped) ->
-        already_escaped
     end
   end
 end
