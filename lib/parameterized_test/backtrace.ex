@@ -8,6 +8,8 @@ defmodule ParameterizedTest.Backtrace do
   end
 
   defp augment_backtrace(bt, context) do
+    IO.inspect(bt, label: "bt", pretty: true, limit: :infinity)
+
     test_idx =
       Enum.find_index(bt, fn {_m, f, _arity, _context} ->
         f
@@ -26,7 +28,11 @@ defmodule ParameterizedTest.Backtrace do
     parameter_stack_frame = {m, attributed_fun, 0, [file: file_path, line: parameter_line]}
     before_test ++ [test_line, parameter_stack_frame | after_test]
   catch
-    _, _ -> bt
+    k, v ->
+      IO.inspect(k, label: "catching k", pretty: true, limit: :infinity)
+      IO.inspect(v, label: "catching v", pretty: true, limit: :infinity)
+      IO.inspect(__STACKTRACE__, label: "__STACKTRACE__", pretty: true, limit: :infinity)
+      bt
   end
 
   defp function_to_attribute(test_fun, context) do
