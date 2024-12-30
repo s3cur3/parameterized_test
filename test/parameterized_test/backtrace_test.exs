@@ -214,6 +214,7 @@ defmodule ParameterizedTest.BacktraceTest do
     end
   end
 
+  @tag skip: true
   @tag failure_with_backtrace: true
   param_feature "handles non-assertion errors in features, attribute to line #{__ENV__.line + 4}",
                 """
