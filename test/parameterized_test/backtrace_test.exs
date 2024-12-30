@@ -44,6 +44,20 @@ defmodule ParameterizedTest.BacktraceTest do
     end
   end
 
+  test "translates Erlang errors" do
+    assert_raise ArithmeticError, fn ->
+      context = [file: __ENV__.file, min_line: __ENV__.line, raw: "| true         |"]
+      ParameterizedTest.Backtrace.add_test_context({:error, :badarith}, [], context)
+    end
+  end
+
+  test "turns other errors into RuntimeErrors" do
+    assert_raise RuntimeError, fn ->
+      context = [file: __ENV__.file, min_line: __ENV__.line, raw: "| true         |"]
+      ParameterizedTest.Backtrace.add_test_context({:timeout, {GenServer, :call, [self(), :slow_call, 0]}}, [], context)
+    end
+  end
+
   @tag failure_with_backtrace: true
   param_test "points to line #{__ENV__.line + 4} when a test fails",
              """
