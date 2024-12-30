@@ -133,9 +133,9 @@ defmodule ParameterizedTest do
         test "#{full_test_name}", unquote(context_ast) do
           try do
             unquote(blocks)
-          rescue
-            e in ExUnit.AssertionError ->
-              ParameterizedTest.Backtrace.add_test_context(e, __STACKTRACE__, @param_test_context)
+          catch
+            category, reason ->
+              ParameterizedTest.Backtrace.add_test_context({category, reason}, __STACKTRACE__, @param_test_context)
           end
         end
       end
@@ -195,9 +195,9 @@ defmodule ParameterizedTest do
           feature "#{@full_test_name}", unquote(context_ast) do
             try do
               unquote(blocks)
-            rescue
-              e in ExUnit.AssertionError ->
-                ParameterizedTest.Backtrace.add_test_context(e, __STACKTRACE__, @param_test_context)
+            catch
+              category, reason ->
+                ParameterizedTest.Backtrace.add_test_context({category, reason}, __STACKTRACE__, @param_test_context)
             end
           end
         end

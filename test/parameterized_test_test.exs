@@ -354,6 +354,17 @@ defmodule ParameterizedTestTest do
              """ do
     flunk("This test should not run")
   end
+
+  param_test "applies param_test: true to all parameterized tests",
+             """
+             | text     | url                  |
+             |----------|----------------------|
+             | "GitHub" | "https://github.com" |
+             | "Google" | "https://google.com" |
+             """,
+             context do
+    assert context[:param_test] == true
+  end
 end
 
 defmodule ParameterizedTestTest.WallabyTest do
@@ -372,5 +383,16 @@ defmodule ParameterizedTestTest.WallabyTest do
     session
     |> visit(url)
     |> assert_has(Wallaby.Query.text(text, minimum: 1))
+  end
+
+  param_feature "applies param_feature: true to all parameterized tests",
+                """
+                | text     | url                  |
+                |----------|----------------------|
+                | "GitHub" | "https://github.com" |
+                | "Google" | "https://google.com" |
+                """,
+                context do
+    assert context[:param_test] == true
   end
 end

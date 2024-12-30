@@ -21,10 +21,10 @@ defmodule ParameterizedTest.BacktraceTest do
 
       try do
         assert not should_fail?
-      rescue
-        e in ExUnit.AssertionError ->
+      catch
+        category, reason ->
           try do
-            ParameterizedTest.Backtrace.add_test_context(e, __STACKTRACE__, context)
+            ParameterizedTest.Backtrace.add_test_context({category, reason}, __STACKTRACE__, context)
           rescue
             ExUnit.AssertionError ->
               assert [failing_line, parameter_line | _] = __STACKTRACE__
@@ -148,5 +148,83 @@ defmodule ParameterizedTest.BacktraceTest do
     gets_free_shipping?: gets_free_shipping?
   } do
     assert not gets_free_shipping?
+  end
+
+  @tag failure_with_backtrace: true
+  param_test "handles other exceptions, attribute to line #{__ENV__.line + 4}",
+             """
+             | should_fail? |
+             | false        |
+             | true         |
+             """,
+             %{should_fail?: should_fail?} do
+    if should_fail? do
+      raise "test failed"
+    else
+      assert 1 == 1
+    end
+  end
+
+  @tag failure_with_backtrace: true
+  param_test "handles code errors, attribute to line #{__ENV__.line + 4}",
+             """
+             | should_fail? |
+             | false        |
+             | true         |
+             """,
+             %{should_fail?: should_fail?} do
+    if should_fail? do
+      assert Code.eval_string("nil + 1") == 2
+    else
+      assert 1 == 1
+    end
+  end
+
+  defmodule SlowGenServer do
+    @moduledoc false
+    @behaviour GenServer
+
+    def start_link(opts \\ []), do: GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+
+    @impl GenServer
+    def init(_), do: {:ok, []}
+
+    def slow_call(pid) do
+      GenServer.call(pid, :slow_call, 0)
+    end
+
+    @impl GenServer
+    def handle_call(:slow_call, _from, state) do
+      :timer.sleep(1000)
+      {:reply, :ok, state}
+    end
+  end
+
+  @tag failure_with_backtrace: true
+  param_test "handles non-assertion errors too, attribute to line #{__ENV__.line + 4}",
+             """
+             | should_fail? |
+             | false        |
+             | true         |
+             """,
+             %{should_fail?: should_fail?} do
+    if should_fail? do
+      {:ok, pid} = SlowGenServer.start_link()
+      SlowGenServer.slow_call(pid)
+    end
+  end
+
+  @tag failure_with_backtrace: true
+  param_feature "handles non-assertion errors in features, attribute to line #{__ENV__.line + 4}",
+                """
+                | should_fail? |
+                | false        |
+                | true         |
+                """,
+                %{should_fail?: should_fail?} do
+    if should_fail? do
+      {:ok, pid} = SlowGenServer.start_link()
+      SlowGenServer.slow_call(pid)
+    end
   end
 end
