@@ -2,9 +2,17 @@ defmodule ParameterizedTest.Backtrace do
   @moduledoc false
   alias ParameterizedTest.Parser
 
-  @spec add_test_context(ExUnit.AssertionError.t(), [tuple()], Parser.context()) :: no_return()
-  def add_test_context(%ExUnit.AssertionError{} = e, bt, context) do
-    reraise e, augment_backtrace(bt, context)
+  @spec add_test_context({atom(), term()}, [tuple()], Parser.context()) :: no_return()
+  def add_test_context({:error, %{__exception__: true} = exception}, bt, context) do
+    reraise exception, augment_backtrace(bt, context)
+  end
+
+  def add_test_context({:error, payload}, bt, context) do
+    reraise ErlangError.normalize(payload, bt), augment_backtrace(bt, context)
+  end
+
+  def add_test_context({kind, payload}, bt, context) do
+    reraise RuntimeError.exception("#{kind}: #{inspect(payload)}"), augment_backtrace(bt, context)
   end
 
   defp augment_backtrace(bt, context) do
