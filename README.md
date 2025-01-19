@@ -406,3 +406,49 @@ param_test "pull test parameters from a file",
   ...
 end
 ```
+
+## Advanced Configuration
+
+### Use the `~PARAMS` sigil for automated Markdown table formatting
+
+If you would like some help from `mix format` to align that Markdown table syntax, 
+you can use the optional [`~PARAMS`](https://hexdocs.pm/parameterized_test/ParameterizedTest.Sigil.html#sigil_PARAMS/2) sigil.
+
+First, you'll need to update the dependency configuration to include `:dev` since 
+we want the library to be needed when running `mix format`.
+
+```diff
+-  {:parameterized_test, "~> 0.6", only: [:test]},
++  {:parameterized_test, "~> 0.6", only: [:dev, :test]},
+```
+
+Next, update your project's `.formatter.exs` file and add 
+`ParameterizedTest.Formatter` to the `plugins:` key.
+
+```elixir
+    plugins: [
+      ParameterizedTest.Formatter,
+    ],
+```
+
+Finally, inside your test module, add `import ParameterizedTest.Sigil` to allow use 
+of the `~PARAMS` sigil. 
+
+With this sigil in use, any execution of `mix format` will realign your Markdown 
+table syntax. Adding this can be particularly helpful if you collaborate 
+with other developers.
+
+```elixir
+param_test "users with editor permissions or better can edit posts",
+           ~PARAMS"""
+           | permissions | can_edit? | description                     |
+           |-------------|-----------|---------------------------------|
+           | :admin      | true      | Admins have max permissions     |
+           | :editor     | true      | Editors can edit (of course!)   |
+           | :viewer     | false     | Viewers are read-only           |
+           | nil         | false     | Anonymous viewers are read-only |
+           """,
+           %{user: user, permissions: permissions, can_edit?: can_edit?} do
+  assert Posts.can_edit?(user) == can_edit?, "#{permissions} permissions should grant edit rights"
+end
+```
