@@ -414,8 +414,8 @@ end
 If you would like some help from `mix format` to align that Markdown table syntax, 
 you can use the optional [`~PARAMS`](https://hexdocs.pm/parameterized_test/ParameterizedTest.Sigil.html#sigil_PARAMS/2) sigil.
 
-First, you'll need to update the dependency configuration to include `:dev` since 
-we want the library to be needed when running `mix format`.
+First, you'll need to update the dependency configuration to include the `:dev` Mix
+environment. We want the library to be available when running `mix format`.
 
 ```diff
 -  {:parameterized_test, "~> 0.6", only: [:test]},
