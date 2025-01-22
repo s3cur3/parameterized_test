@@ -438,6 +438,7 @@ With this sigil in use, any execution of `mix format` will realign your Markdown
 table syntax. Adding this can be particularly helpful if you collaborate 
 with other developers.
 
+Sample usage of the sigil to ensure the formatter will automatically shrink or expand the columns in the future:
 ```elixir
 param_test "users with editor permissions or better can edit posts",
            ~PARAMS"""
