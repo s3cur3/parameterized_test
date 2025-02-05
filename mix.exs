@@ -95,7 +95,7 @@ defmodule ParameterizedTest.MixProject do
     if Version.match?(System.version(), "< 1.15.0") do
       []
     else
-      [{:styler, "~> 0.11", only: [:dev, :test], runtime: false}]
+      [{:styler, "~> 1.3", only: [:dev, :test], runtime: false}]
     end
   end
 
