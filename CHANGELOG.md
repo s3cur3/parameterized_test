@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.1
+
+- Removes a conflict with `use Wallaby.Feature` within `param_feature`, fixing issues where both your test module and `parameterized_test` were trying to invoke the Wallaby setup (#82)—thanks to @axelson for reporting.
+- Improvements to `~PARAMS` docs in readme, courtesy of first time contributor @zorn
+- Runtime dependency update: wallaby 0.30.10 -> 0.30.12
+- Dev dependency updates
+    - excoveralls 0.18.3 -> 0.18.5
+    - ex_doc 0.36.1 -> 0.40.1
+    - styler 0.11.9 -> 1.4.2
+
 ## v0.6.0
 
 ### New feature, and potentially breaking change: [Add the failing parameter line to the backtrace when a test fails](https://github.com/s3cur3/parameterized_test/pull/41)
