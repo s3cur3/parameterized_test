@@ -370,6 +370,7 @@ end
 defmodule ParameterizedTestTest.WallabyTest do
   use ExUnit.Case, async: true
 
+  use Wallaby.Feature
   import ParameterizedTest
 
   param_feature "supports Wallaby tests",

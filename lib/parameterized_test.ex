@@ -165,7 +165,7 @@ defmodule ParameterizedTest do
     """
     defmacro param_feature(test_name, examples, context_ast \\ quote(do: %{}), blocks) do
       quote location: :keep do
-        use Wallaby.Feature
+        require Wallaby.Feature
 
         context =
           __ENV__
@@ -192,7 +192,7 @@ defmodule ParameterizedTest do
           @param_test_context context
 
           @tag param_test: true
-          feature "#{@full_test_name}", unquote(context_ast) do
+          Wallaby.Feature.feature "#{@full_test_name}", unquote(context_ast) do
             try do
               unquote(blocks)
             catch

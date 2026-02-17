@@ -5,6 +5,7 @@ defmodule ParameterizedTest.BacktraceTest do
   # obviously correct behavior here.
   use ExUnit.Case, async: true
 
+  use Wallaby.Feature
   import ParameterizedTest
 
   param_test "gives the failing parameter row when a test fails",
