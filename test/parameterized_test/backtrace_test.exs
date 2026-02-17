@@ -4,6 +4,7 @@ defmodule ParameterizedTest.BacktraceTest do
   # This is to be expected, and is kind of the price to pay for getting really
   # obviously correct behavior here.
   use ExUnit.Case, async: true
+  use Wallaby.Feature
 
   import ParameterizedTest
 
