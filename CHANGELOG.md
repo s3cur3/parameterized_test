@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.2
+
+- Fix compile warnings on Elixir 1.20 (#90)
+
+Dev-only changes:
+
+- Dev dependency updates
+    - ex_doc 0.40.1 -> 0.40.3
+    - credo 1.7.16
+- CI updates to support running on the latest Ubuntu (we now only run CI against Elixir 1.17 and 1.20; #90)
+
 ## v0.6.1
 
 - Removes a conflict with `use Wallaby.Feature` within `param_feature`, fixing issues where both your test module and `parameterized_test` were trying to invoke the Wallaby setup (#82)—thanks to @axelson for reporting.
