@@ -6,5 +6,6 @@
 # More info in the Dialyxir README:
 # https://github.com/jeremyjh/dialyxir#elixir-term-format
 [
-  {"deps/nimble_csv/lib/nimble_csv.ex", :unmatched_return}
+  # Elixir 1.20 ignores `log: false` in Code.eval_string/3 calls, but earlier versions need it.
+  {"lib/parameterized_test/parser.ex", :call}
 ]

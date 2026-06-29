@@ -189,7 +189,7 @@ defmodule ParameterizedTest.BacktraceTest do
              """,
              %{should_fail?: should_fail?} do
     if should_fail? do
-      assert Code.eval_string("nil + 1") == 2
+      assert Code.eval_string("nil + 1") == {:ok, []}
     else
       assert 1 == 1
     end

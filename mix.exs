@@ -17,16 +17,6 @@ defmodule ParameterizedTest.MixProject do
       name: "ParameterizedTest",
       package: package(),
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [
-        check: :test,
-        "check.fast": :test,
-        coveralls: :test,
-        "coveralls.detail": :test,
-        "coveralls.json": :test,
-        "coveralls.html": :test,
-        dialyzer: :dev,
-        "test.all": :test
-      ],
       dialyzer: [
         ignore_warnings: ".dialyzer_ignore.exs",
         plt_add_apps: [:mix, :ex_unit],
@@ -41,6 +31,21 @@ defmodule ParameterizedTest.MixProject do
         ],
         # Error out when an ignore rule is no longer useful so we can remove it
         list_unused_filters: true
+      ]
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: [
+        check: :test,
+        "check.fast": :test,
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.json": :test,
+        "coveralls.html": :test,
+        dialyzer: :dev,
+        "test.all": :test
       ]
     ]
   end
