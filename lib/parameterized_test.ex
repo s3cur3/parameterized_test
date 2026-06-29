@@ -77,8 +77,6 @@ defmodule ParameterizedTest do
   """
   alias ParameterizedTest.Parser
 
-  require ParameterizedTest.Backtrace
-
   @doc """
   Defines tests that use your parameters or example data.
 
