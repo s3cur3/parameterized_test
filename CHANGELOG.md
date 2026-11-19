@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.3
+
+- Fix tags propagation in tests, by first-time contributor @katafrakt ([PR](https://github.com/s3cur3/parameterized_test/pull/97))
+
+Dev-only dependency updates:
+
+- ex_doc 0.40.3 -> 0.40.4
+- dialyxir 1.4.7 -> 1.4.9
+
 ## v0.6.2
 
 - Fix compile warnings on Elixir 1.20 (#90)
