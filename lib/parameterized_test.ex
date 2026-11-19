@@ -110,9 +110,11 @@ defmodule ParameterizedTest do
 
       escaped_examples = Parser.escape_examples(unquote(examples), context)
 
-      block_tags = Module.get_attribute(__MODULE__, :tag)
+      block_tags = __MODULE__ |> Module.get_attribute(:tag) |> Enum.reverse()
 
       for {{example, context}, index} <- Enum.with_index(escaped_examples) do
+        Module.delete_attribute(__MODULE__, :tag)
+
         for {key, val} <- example do
           @tag [{key, val}]
         end
@@ -120,9 +122,9 @@ defmodule ParameterizedTest do
         unquoted_test_name = unquote(test_name)
         full_test_name = Parser.full_test_name(unquoted_test_name, example, index, 212)
 
-        # "Forward" tags defined on the param_test macro itself
-        for [{key, val} | _] <- block_tags do
-          @tag [{key, val}]
+        # Replay declarations in source order so later tags keep their precedence.
+        for tag <- block_tags do
+          @tag tag
         end
 
         @param_test_context context
@@ -172,9 +174,11 @@ defmodule ParameterizedTest do
 
         escaped_examples = Parser.escape_examples(unquote(examples), context)
 
-        block_tags = Module.get_attribute(__MODULE__, :tag)
+        block_tags = __MODULE__ |> Module.get_attribute(:tag) |> Enum.reverse()
 
         for {{example, context}, index} <- Enum.with_index(escaped_examples) do
+          Module.delete_attribute(__MODULE__, :tag)
+
           for {key, val} <- example do
             @tag [{key, val}]
           end
@@ -182,9 +186,9 @@ defmodule ParameterizedTest do
           unquoted_test_name = unquote(test_name)
           @full_test_name Parser.full_test_name(unquoted_test_name, example, index, 212)
 
-          # "Forward" tags defined on the param_test macro itself
-          for [{key, val} | _] <- block_tags do
-            @tag [{key, val}]
+          # Replay declarations in source order so later tags keep their precedence.
+          for tag <- block_tags do
+            @tag tag
           end
 
           @param_test_context context
